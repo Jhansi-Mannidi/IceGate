@@ -1,0 +1,246 @@
+import type {
+  AiExtraction,
+  DeclarationItem,
+  Invoice,
+  JobDocument,
+  MandatoryDocCode,
+  PreflightRule,
+  TimelineNode,
+} from "./types"
+import { jobs } from "./data"
+
+export function getJob(id: string) {
+  return jobs.find((j) => j.id === id)
+}
+
+export const jobHeader = {
+  port: "INNSA1",
+  portName: "Mumbai Sea (Nhava Sheva)",
+  importerName: "Anantara Electronics Pvt Ltd",
+  branch: "Andheri MIDC — Unit 2",
+  gstin: "27AAACA1234F1ZP",
+  adCode: "6390204",
+  cbCode: "CBX2201JN",
+  signatory: "Ravi Kulkarni (Licence Holder)",
+  mode: "Sea (FCL)",
+  igmNo: "2612345",
+  igmDate: "16 Sep 2026",
+  blNo: "MAEU2209481127",
+  containers: [
+    { no: "MSKU7712340", size: "40ft", seal: "SL88213", fcl: true },
+    { no: "TCLU9902187", size: "40ft", seal: "SL88214", fcl: true },
+  ],
+  originCountry: "China (CN)",
+  consignmentCountry: "China (CN)",
+}
+
+export const invoices: Invoice[] = [
+  {
+    id: "INV-1",
+    invoiceNo: "SH-EXP/2026/0417",
+    invoiceDate: "05 Sep 2026",
+    currency: "USD",
+    value: 48250,
+    terms: "CIF Nhava Sheva",
+    freight: 2100,
+    insurance: 340,
+    exchangeRate: 83.2,
+    rateEffectiveDate: "01 Sep 2026",
+  },
+]
+
+export const declarationItems: DeclarationItem[] = [
+  {
+    lineNo: 1,
+    cth: "85177090",
+    cthConfirmed: true,
+    description: "Populated PCB assemblies for mobile network base stations",
+    qty: 240,
+    uqc: "NOS",
+    unitValue: 118.4,
+    assessableValueInr: 2367800,
+    notification: "50/2017-Cus",
+    serial: "512",
+    bcd: 47356,
+    sws: 4736,
+    igst: 44100,
+    cess: 0,
+  },
+  {
+    lineNo: 2,
+    cth: "",
+    cthConfirmed: false,
+    cthSuggestions: [
+      { cth: "85177090", confidence: 78, reason: "Matches invoice description keywords 'PCB sub-assembly' and prior filings for this IEC at 3 CTH digits (8517)." },
+      { cth: "85340000", confidence: 14, reason: "Populated circuit boards without RF front-end could classify as bare-populated PCB under 8534 in some prior rulings." },
+      { cth: "85299090", confidence: 8, reason: "Generic 'parts of apparatus of heading 8525-8528' fallback classification." },
+    ],
+    description: "Sub-assembly module, RF front-end, unmounted",
+    qty: 600,
+    uqc: "NOS",
+    unitValue: 42.6,
+    assessableValueInr: 2129600,
+    bcd: 42592,
+    sws: 4259,
+    igst: 39670,
+    cess: 0,
+  },
+  {
+    lineNo: 3,
+    cth: "39199090",
+    cthConfirmed: true,
+    description: "Self-adhesive polymer shielding film, rolls",
+    qty: 1200,
+    uqc: "MTR",
+    unitValue: 3.1,
+    assessableValueInr: 309400,
+    notification: "—",
+    serial: "—",
+    bcd: 30940,
+    sws: 3094,
+    igst: 5580,
+    cess: 0,
+  },
+]
+
+export const preflightRules: PreflightRule[] = [
+  {
+    id: "RULE-1",
+    severity: "block",
+    message: "Line item 2 has no confirmed CTH. Accept or override the AI suggestion before filing.",
+    field: "Item 2 · CTH",
+    tab: "items",
+  },
+  {
+    id: "RULE-2",
+    severity: "block",
+    message: "Certificate of Origin (doc code 856) is mandatory for CTH 85177090 under this notification and is not linked.",
+    field: "Documents · 856",
+    tab: "documents",
+  },
+  {
+    id: "RULE-3",
+    severity: "warn",
+    message: "Assessable value arithmetic differs from invoice + freight + insurance by ₹840 (tolerance ±₹1). Provide a reason to override.",
+    field: "Invoice · Assessable value",
+    tab: "invoices",
+  },
+  {
+    id: "RULE-4",
+    severity: "warn",
+    message: "GSTIN checksum passes but branch code on this GSTIN does not match the declared importer branch.",
+    field: "Header · GSTIN",
+    tab: "header",
+  },
+  {
+    id: "RULE-5",
+    severity: "log",
+    message: "CB is registered at this port (INNSA1) — no action needed.",
+    field: "Header · CB code",
+    tab: "header",
+  },
+  {
+    id: "RULE-6",
+    severity: "log",
+    message: "Port code INNSA1 verified against customs location master (last synced 17 Sep 2026, 06:00 IST).",
+    field: "Header · Port",
+    tab: "header",
+  },
+]
+
+export const aiExtractions: AiExtraction[] = [
+  { field: "Invoice number", value: "SH-EXP/2026/0417", confidence: 96, source: "invoice_page1.pdf" },
+  { field: "Invoice value", value: "USD 48,250.00", confidence: 94, source: "invoice_page1.pdf" },
+  { field: "B/L number", value: "MAEU2209481127", confidence: 91, source: "bill_of_lading.pdf" },
+  { field: "Container numbers", value: "MSKU7712340, TCLU9902187", confidence: 89, source: "packing_list.pdf" },
+  { field: "Item 2 CTH", value: "85177090 (top match)", confidence: 78, source: "invoice_page2.pdf" },
+]
+
+export const jobDocuments: JobDocument[] = [
+  {
+    id: "DOC-1",
+    fileName: "commercial_invoice.pdf",
+    docCode: "380",
+    docName: "Commercial Invoice",
+    aiProposed: false,
+    stage: "uploaded",
+    sizeBeforeKb: 820,
+    sizeAfterKb: 640,
+    dpi: 300,
+    signer: "Ravi Kulkarni",
+    dscSerial: "4A:9F:2C:11:87:E0",
+    irn: "IRN2609170001834762",
+    drn: "DRN26091700456",
+    uploadedAt: "17 Sep 2026, 09:14 IST",
+  },
+  {
+    id: "DOC-2",
+    fileName: "packing_list.pdf",
+    docCode: "271",
+    docName: "Packing List",
+    aiProposed: true,
+    stage: "signed",
+    sizeBeforeKb: 410,
+    sizeAfterKb: 340,
+    dpi: 300,
+    signer: "Ravi Kulkarni",
+    dscSerial: "4A:9F:2C:11:87:E0",
+    uploadedAt: "17 Sep 2026, 09:16 IST",
+  },
+  {
+    id: "DOC-3",
+    fileName: "bill_of_lading.pdf",
+    docCode: "705",
+    docName: "Bill of Lading",
+    aiProposed: true,
+    stage: "normalised",
+    sizeBeforeKb: 1240,
+    sizeAfterKb: 890,
+    dpi: 220,
+  },
+  {
+    id: "DOC-4",
+    fileName: "catalogue_scan.pdf",
+    docCode: "916",
+    docName: "Technical Write-up / Catalogue",
+    aiProposed: true,
+    stage: "classified",
+    sizeBeforeKb: 14200,
+    sizeAfterKb: 8700,
+    dpi: 180,
+    splitRequired: true,
+    parts: 2,
+  },
+  {
+    id: "DOC-5",
+    fileName: "insurance_cert.pdf",
+    docCode: "091",
+    docName: "Insurance Certificate",
+    aiProposed: false,
+    stage: "classified",
+    sizeBeforeKb: 260,
+  },
+]
+
+export const mandatoryDocCodes: MandatoryDocCode[] = [
+  { code: "380", name: "Commercial Invoice", present: true },
+  { code: "271", name: "Packing List", present: true },
+  { code: "705", name: "Bill of Lading", present: true },
+  { code: "856", name: "Certificate of Origin", present: false },
+  { code: "091", name: "Insurance Certificate", present: true },
+  { code: "916", name: "Technical Write-up / Catalogue", present: true },
+]
+
+export const beLifecycle: TimelineNode[] = [
+  { id: "T1", label: "Draft created", status: "completed", timestamp: "14 Sep 2026, 10:02 IST", detail: "v1 created by Meena Shah from ERP feed." },
+  { id: "T2", label: "Validated", status: "completed", timestamp: "14 Sep 2026, 11:20 IST", detail: "Pre-flight passed with 2 warnings overridden." },
+  { id: "T3", label: "Docs linked", status: "completed", timestamp: "14 Sep 2026, 15:44 IST", detail: "6 e-Sanchit documents bound; IRNs issued." },
+  { id: "T4", label: "Query raised", status: "exception", timestamp: "15 Sep 2026, 09:30 IST", detail: "Group 5A queried CTH for line item 2.", branch: true },
+  { id: "T5", label: "Ready to file", status: "completed", timestamp: "17 Sep 2026, 08:40 IST", detail: "Query resolved, re-validated as v3." },
+  { id: "T6", label: "Submitted", status: "completed", timestamp: "17 Sep 2026, 09:02 IST", detail: "Transmitted via Open API, ack received." },
+  { id: "T7", label: "BE number generated", status: "completed", timestamp: "17 Sep 2026, 09:04 IST", detail: "BE 4817652 dated 17 Sep 2026." },
+  { id: "T8", label: "Under appraisement", status: "current", timestamp: "17 Sep 2026, 11:42 IST", detail: "With Group 5A, INNSA1. Section 47 clock running." },
+  { id: "T9", label: "Assessed", status: "future" },
+  { id: "T10", label: "Duty paid", status: "future" },
+  { id: "T11", label: "Out of Charge", status: "future" },
+]

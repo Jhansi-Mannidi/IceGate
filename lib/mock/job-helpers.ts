@@ -1,0 +1,35 @@
+import type { JobState } from "./types"
+
+export const stateOptions: { value: JobState; label: string }[] = [
+  { value: "DRAFT", label: "Draft" },
+  { value: "VALIDATED", label: "Validated" },
+  { value: "DOCS_LINKED", label: "Docs Linked" },
+  { value: "READY_TO_FILE", label: "Ready to File" },
+  { value: "SUBMITTED", label: "Submitted" },
+  { value: "NUMBER_GENERATED", label: "Number Generated" },
+  { value: "UNDER_APPRAISEMENT", label: "Under Appraisement" },
+  { value: "QUERY_RAISED", label: "Query Raised" },
+  { value: "GOODS_REGISTERED", label: "Goods Registered" },
+  { value: "ASSESSED", label: "Assessed" },
+  { value: "DUTY_PAID", label: "Duty Paid" },
+  { value: "OUT_OF_CHARGE", label: "Out of Charge" },
+  { value: "LEO_GRANTED", label: "LEO Granted" },
+  { value: "EXPORTED", label: "Exported" },
+  { value: "REJECTED", label: "Rejected" },
+  { value: "TRANSMIT_FAILED", label: "Transmit Failed" },
+  { value: "AMENDMENT", label: "Amendment" },
+  { value: "CANCELLED", label: "Cancelled" },
+]
+
+export const lifecycleSteps: { key: JobState; label: string }[] = [
+  { key: "DRAFT", label: "Draft" },
+  { key: "VALIDATED", label: "Validated" },
+  { key: "DOCS_LINKED", label: "Docs Linked" },
+  { key: "READY_TO_FILE", label: "Ready to File" },
+  { key: "SUBMITTED", label: "Submitted" },
+  { key: "NUMBER_GENERATED", label: "Number Generated" },
+  { key: "UNDER_APPRAISEMENT", label: "Under Appraisement" },
+  { key: "ASSESSED", label: "Assessed" },
+  { key: "DUTY_PAID", label: "Duty Paid" },
+  { key: "OUT_OF_CHARGE", label: "Out of Charge" },
+]
