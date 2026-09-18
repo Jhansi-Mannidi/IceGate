@@ -87,7 +87,7 @@ export default function JobDetailPage() {
 
       <div className="grid grid-cols-1 gap-5 @lg:grid-cols-[minmax(0,1fr)_320px]">
         <Tabs defaultValue="items">
-          <TabsList className="w-full justify-start overflow-x-auto print:hidden">
+          <TabsList className="w-full justify-start overflow-x-auto overflow-y-hidden print:hidden">
             <TabsTrigger value="header">Header</TabsTrigger>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="items">Items</TabsTrigger>

@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { Suspense } from "react"
+import { useRouter, useSearchParams } from "next/navigation"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -48,8 +49,18 @@ function expiryTone(days: number) {
 }
 
 export default function AdminPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminPageContent />
+    </Suspense>
+  )
+}
+
+function AdminPageContent() {
   useBreadcrumb([{ label: "Firm Admin" }])
-  const [section, setSection] = useState<SubSection>("tenant")
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const section = (searchParams.get("section") as SubSection | null) ?? "tenant"
 
   return (
       <div className="flex flex-col gap-4 p-3 @md:p-4">
@@ -60,9 +71,9 @@ export default function AdminPage() {
           </p>
         </div>
 
-        {/* Mobile/tablet: dropdown selector */}
+        {/* Mobile/tablet: dropdown selector — desktop uses the sidebar's own section nav */}
         <div className="@lg:hidden">
-          <Select value={section} onValueChange={(v) => setSection(v as SubSection)}>
+          <Select value={section} onValueChange={(v) => router.push(`/admin?section=${v}`)}>
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -76,33 +87,13 @@ export default function AdminPage() {
           </Select>
         </div>
 
-        <div className="flex gap-6">
-          {/* Desktop sub-nav */}
-          <nav className="hidden w-56 shrink-0 flex-col gap-1 @lg:flex">
-            {subNavItems.map((item) => (
-              <button
-                key={item.id}
-                onClick={() => setSection(item.id)}
-                className={cn(
-                  "rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
-                  section === item.id
-                    ? "bg-secondary text-secondary-foreground"
-                    : "text-muted-foreground hover:bg-secondary/60 hover:text-foreground",
-                )}
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
-
-          <div className="min-w-0 flex-1">
-            {section === "tenant" && <TenantProfileSection />}
-            {section === "ports" && <PortsSection />}
-            {section === "dsc" && <DscSection />}
-            {section === "channels" && <ChannelsSection />}
-            {section === "clients" && <ClientsKycSection />}
-            {section === "users" && <UsersRolesSection />}
-          </div>
+        <div className="min-w-0 flex-1">
+          {section === "tenant" && <TenantProfileSection />}
+          {section === "ports" && <PortsSection />}
+          {section === "dsc" && <DscSection />}
+          {section === "channels" && <ChannelsSection />}
+          {section === "clients" && <ClientsKycSection />}
+          {section === "users" && <UsersRolesSection />}
         </div>
       </div>
   )
