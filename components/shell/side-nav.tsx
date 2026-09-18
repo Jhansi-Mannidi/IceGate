@@ -1,8 +1,8 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Search } from "lucide-react"
 import { useMock } from "@/lib/mock/providers"
@@ -23,9 +23,9 @@ export function SideNav() {
   ) ?? (pathname === "/" ? items[0] : undefined)
 
   return (
-    <div className="flex shrink-0">
+    <div className="flex shrink-0 print:hidden">
       {/* Icon rail — always visible on desktop and tablet */}
-      <aside className="flex w-[76px] shrink-0 flex-col items-stretch border-r border-border bg-surface py-2">
+      <aside className="flex w-[92px] shrink-0 flex-col items-stretch border-r border-border bg-surface py-2">
         <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2">
           {items.map((item) => {
             const active =
@@ -120,6 +120,16 @@ function SecondaryPanel({
     return items.filter((sub) => sub.label.toLowerCase().includes(q))
   }, [items, query])
 
+  const searchParams = useSearchParams()
+  const currentQuery = searchParams.toString()
+  const [hash, setHash] = useState("")
+  useEffect(() => {
+    setHash(window.location.hash)
+    const onHashChange = () => setHash(window.location.hash)
+    window.addEventListener("hashchange", onHashChange)
+    return () => window.removeEventListener("hashchange", onHashChange)
+  }, [pathname])
+
   return (
     <aside className="flex w-56 shrink-0 flex-col border-r border-border bg-surface py-3">
       <div className="mb-3 px-3">
@@ -135,15 +145,22 @@ function SecondaryPanel({
       </div>
       <nav className="flex flex-col gap-1 px-2">
         {filtered.map((sub) => {
-          const [subPath, subQuery] = sub.href.split(/[?#]/)
-          const currentQuery = typeof window !== "undefined" ? window.location.search.replace("?", "") : ""
-          const subActive =
-            pathname === (subPath || "/") &&
-            (sub.href.includes("?") ? currentQuery === subQuery : !currentQuery || sub.href === pathname)
+          const [beforeHash, subHash] = sub.href.split("#")
+          const [subPath, subQuery] = beforeHash.split("?")
+
+          let subActive = pathname === (subPath || "/")
+          if (subActive && subHash) {
+            subActive = hash === `#${subHash}`
+          } else if (subActive && subQuery) {
+            subActive = currentQuery === subQuery
+          } else if (subActive) {
+            subActive = !currentQuery && !hash
+          }
           return (
             <Link
               key={sub.href}
               href={sub.href}
+              onClick={() => setHash(subHash ? `#${subHash}` : "")}
               className={cn(
                 "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 subActive

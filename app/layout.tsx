@@ -5,6 +5,7 @@ import { TooltipProvider } from '@/components/ui/tooltip'
 import { Toaster } from '@/components/ui/sonner'
 import { MockProvider } from '@/lib/mock/providers'
 import { BreadcrumbProvider } from '@/lib/mock/breadcrumb-context'
+import { AppShell } from '@/components/shell/app-shell'
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -42,7 +43,7 @@ export default function RootLayout({
         <MockProvider>
           <BreadcrumbProvider>
             <TooltipProvider delayDuration={200}>
-              {children}
+              <AppShell>{children}</AppShell>
               <Toaster position="top-right" />
             </TooltipProvider>
           </BreadcrumbProvider>

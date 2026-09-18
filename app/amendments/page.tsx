@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AppShell } from "@/components/shell/app-shell"
+import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,13 +33,13 @@ function stageTone(stage: AmendmentStage) {
 }
 
 export default function AmendmentsPage() {
+  useBreadcrumb([{ label: "Amendments" }])
   const [selectedId, setSelectedId] = useState(amendmentRequests[0].id)
   const [showNewForm, setShowNewForm] = useState(false)
   const selected = amendmentRequests.find((r) => r.id === selectedId) ?? amendmentRequests[0]
 
   return (
-    <AppShell breadcrumbs={[{ label: "Home", href: "/" }, { label: "Amendments" }]}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 p-3 @md:p-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-balance">Amendments & Cancellations</h1>
@@ -188,7 +188,6 @@ export default function AmendmentsPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   )
 }
 

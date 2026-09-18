@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
-import { Search, ChevronDown, MessageSquareText, Send, Paperclip, AlertTriangle } from "lucide-react"
+import { useRouter, useSearchParams } from "next/navigation"
+import { Search, ChevronDown, MessageSquareText, Send, Paperclip, AlertTriangle, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -24,7 +24,6 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
 import { Textarea } from "@/components/ui/textarea"
-import { AppShell } from "@/components/shell/app-shell"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { KpiCard } from "@/components/icegate/kpi-card"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
@@ -38,6 +37,8 @@ const owners = Array.from(new Set(queryDesk.map((q) => q.owner)))
 export default function QueriesPage() {
   useBreadcrumb([{ label: "Query & Deadline Desk" }])
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const view = searchParams.get("view") === "deadlines" ? "deadlines" : "queries"
   const { device } = useMock()
 
   const [query, setQuery] = React.useState("")
@@ -45,6 +46,8 @@ export default function QueriesPage() {
   const [ownerFilter, setOwnerFilter] = React.useState<string[]>([])
   const [activeQuery, setActiveQuery] = React.useState(queryDesk[0]?.job ?? null)
   const [draftReply, setDraftReply] = React.useState("")
+  const [attachments, setAttachments] = React.useState<File[]>([])
+  const attachInputRef = React.useRef<HTMLInputElement>(null)
 
   const filtered = queryDesk.filter((q) => {
     if (query && !`${q.job} ${q.client} ${q.excerpt}`.toLowerCase().includes(query.toLowerCase())) return false
@@ -118,8 +121,7 @@ export default function QueriesPage() {
   )
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-4 p-4 @md:p-6">
+      <div className="flex flex-col gap-3 p-3 @md:p-4">
         <div>
           <h1 className="text-xl font-semibold text-balance">Query & Deadline Desk</h1>
           <p className="text-sm text-muted-foreground">
@@ -158,7 +160,8 @@ export default function QueriesPage() {
           />
         </div>
 
-        <div className="rounded-lg border border-border">
+        {view === "deadlines" ? (
+        <div className="rounded-lg border border-border shadow-sm">
           <div className="flex items-center justify-between border-b border-border px-4 py-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="size-4 text-status-warning" />
@@ -200,7 +203,7 @@ export default function QueriesPage() {
           </Table>
           <TablePagination total={deadlineBoard.length} />
         </div>
-
+        ) : (
         <div>
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <h2 className="text-sm font-semibold">Officer queries</h2>
@@ -286,14 +289,49 @@ export default function QueriesPage() {
                   placeholder="Draft your reply to the officer's query…"
                   rows={5}
                 />
+                {attachments.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {attachments.map((file, i) => (
+                      <div
+                        key={`${file.name}-${i}`}
+                        className="flex items-center gap-1.5 rounded-md border border-border bg-muted px-2 py-1 text-xs"
+                      >
+                        <Paperclip className="size-3 text-muted-foreground" />
+                        {file.name}
+                        <button
+                          type="button"
+                          onClick={() => setAttachments((prev) => prev.filter((_, idx) => idx !== i))}
+                          className="text-muted-foreground hover:text-foreground"
+                        >
+                          <X className="size-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <input
+                  ref={attachInputRef}
+                  type="file"
+                  multiple
+                  className="hidden"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files ?? [])
+                    if (files.length) setAttachments((prev) => [...prev, ...files])
+                    e.target.value = ""
+                  }}
+                />
                 <div className="flex items-center justify-between">
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" onClick={() => attachInputRef.current?.click()}>
                     <Paperclip data-icon="inline-start" />
                     Attach evidence
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => router.push(`/jobs/${selected.job.replace(/-[A-Z]$/, "")}`)}
+                    onClick={() => {
+                      setDraftReply("")
+                      setAttachments([])
+                      router.push(`/jobs/${selected.job.replace(/-[A-Z]$/, "")}`)
+                    }}
                   >
                     <Send data-icon="inline-start" />
                     Send reply
@@ -303,7 +341,7 @@ export default function QueriesPage() {
             )}
           </div>
         </div>
+        )}
       </div>
-    </AppShell>
   )
 }

@@ -18,10 +18,18 @@ import {
 } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
-import { AppShell } from "@/components/shell/app-shell"
 import { KpiCard } from "@/components/icegate/kpi-card"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
-import { auditEvents, evidencePackContents, adoptionMetrics } from "@/lib/mock/audit-data"
+import {
+  auditEvents,
+  evidencePackContents,
+  adoptionMetrics,
+  rejectionTrend,
+  prepTimeTrend,
+  queryTurnaroundBuckets,
+  timeToClearance,
+  deadlineBreaches,
+} from "@/lib/mock/audit-data"
 import {
   RejectionTrendChart,
   PrepTimeTrendChart,
@@ -29,6 +37,8 @@ import {
   TimeToClearanceChart,
   DeadlineBreachChart,
 } from "@/components/audit/report-charts"
+import { downloadJson, timestampSlug } from "@/lib/mock/export"
+import { toast } from "sonner"
 
 export default function AuditPage() {
   useBreadcrumb([{ label: "Audit & Reports" }])
@@ -41,9 +51,37 @@ export default function AuditPage() {
       : true,
   )
 
+  function handleExportCompliancePack() {
+    downloadJson(`compliance-pack-${timestampSlug()}.json`, {
+      generatedAt: new Date().toISOString(),
+      kpis: {
+        rejectionRate: "2.6%",
+        avgPrepTime: "38 min",
+        avgTimeToOoc: "7.2 hrs",
+        pctFiledViaVoltus: adoptionMetrics.pctFiledViaVoltus,
+      },
+      rejectionTrend,
+      prepTimeTrend,
+      queryTurnaroundBuckets,
+      timeToClearance,
+      deadlineBreaches,
+      auditTrail: auditEvents,
+    })
+    toast.success("Compliance pack exported")
+  }
+
+  function handleGenerateEvidencePack(jobId: string) {
+    downloadJson(`evidence-pack-${jobId}-${timestampSlug()}.json`, {
+      jobId,
+      generatedAt: new Date().toISOString(),
+      contents: evidencePackContents,
+      auditTrail: auditEvents.filter((e) => e.job === jobId),
+    })
+    toast.success(`Evidence pack generated for ${jobId}`)
+  }
+
   return (
-    <AppShell>
-      <div className="flex flex-col gap-4 p-4 @md:p-6">
+      <div className="flex flex-col gap-3 p-3 @md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-balance">Audit & Reports</h1>
@@ -51,7 +89,7 @@ export default function AuditPage() {
               Tamper-evident trail of every action, and firm-wide compliance analytics
             </p>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportCompliancePack}>
             <Download data-icon="inline-start" />
             Export compliance pack
           </Button>
@@ -158,7 +196,7 @@ export default function AuditPage() {
               />
             </div>
 
-            <div className="rounded-lg border border-border">
+            <div className="rounded-lg border border-border shadow-sm">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -202,7 +240,7 @@ export default function AuditPage() {
         </Tabs>
 
         <Dialog open={!!selectedEvent} onOpenChange={(open) => !open && setSelectedEvent(null)}>
-          <DialogContent className="@sm:max-w-lg">
+          <DialogContent className="sm:max-w-xl">
             {selectedEvent && (
               <>
                 <DialogHeader>
@@ -233,7 +271,7 @@ export default function AuditPage() {
                     </div>
                   </div>
                   {(selectedEvent.before || selectedEvent.after) && (
-                    <div className="rounded-lg border border-border">
+                    <div className="rounded-lg border border-border shadow-sm">
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -283,7 +321,7 @@ export default function AuditPage() {
               </div>
               <Dialog>
                 <DialogTrigger render={<Button variant="outline">Preview contents</Button>} />
-                <DialogContent className="@sm:max-w-md">
+                <DialogContent className="sm:max-w-lg">
                   <DialogHeader>
                     <DialogTitle>Evidence pack contents</DialogTitle>
                     <DialogDescription>Bundled as a single signed ZIP with a manifest hash</DialogDescription>
@@ -297,7 +335,7 @@ export default function AuditPage() {
                     ))}
                   </ul>
                   <DialogFooter>
-                    <Button>
+                    <Button onClick={() => handleGenerateEvidencePack("JOB-2026-004812")}>
                       <Download data-icon="inline-start" />
                       Generate for JOB-2026-004812
                     </Button>
@@ -315,6 +353,5 @@ export default function AuditPage() {
           </CardContent>
         </Card>
       </div>
-    </AppShell>
   )
 }

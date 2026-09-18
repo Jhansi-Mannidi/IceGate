@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { AppShell } from "@/components/shell/app-shell"
 import { StatusPill } from "@/components/icegate/status-pill"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { KpiCard } from "@/components/icegate/kpi-card"
@@ -30,6 +29,21 @@ import {
   portalDocuments,
   portalActivity,
 } from "@/lib/mock/portal-data"
+import { downloadText } from "@/lib/mock/export"
+import { toast } from "sonner"
+
+function handleDownloadDocument(doc: (typeof portalDocuments)[number]) {
+  downloadText(
+    `${doc.name.replace(/[^\w.-]+/g, "_")}.txt`,
+    [
+      doc.name,
+      `Job: ${doc.job}`,
+      `Category: ${doc.category}`,
+      `Shared by: ${doc.sharedBy} on ${doc.sharedAt}`,
+    ].join("\n"),
+  )
+  toast.success(`Downloaded ${doc.name}`)
+}
 
 export default function ClientPortalPage() {
   useBreadcrumb([{ label: "Client Portal" }])
@@ -40,8 +54,7 @@ export default function ClientPortalPage() {
   const openApprovals = pendingApprovals.filter((a) => !decided[a.job])
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-5 p-4 @md:p-6">
+      <div className="flex flex-col gap-4 p-3 @md:p-4">
         {/* Header */}
         <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 @md:flex-row @md:items-center @md:justify-between">
           <div className="flex items-start gap-3">
@@ -270,7 +283,12 @@ export default function ClientPortalPage() {
                           </p>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon-sm" className="shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="shrink-0"
+                        onClick={() => handleDownloadDocument(doc)}
+                      >
                         <Download />
                         <span className="sr-only">Download {doc.name}</span>
                       </Button>
@@ -302,6 +320,5 @@ export default function ClientPortalPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   )
 }

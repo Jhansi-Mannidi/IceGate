@@ -10,7 +10,7 @@ export function BreadcrumbBar() {
   if (items.length === 0) return null
 
   return (
-    <div className="flex h-9 shrink-0 items-center gap-1.5 border-b border-border bg-surface px-4 text-xs text-muted-foreground">
+    <div className="flex h-9 shrink-0 items-center gap-1.5 border-b border-border bg-surface px-4 text-xs text-muted-foreground print:hidden">
       <Link href="/" className="hover:text-foreground">
         Home
       </Link>

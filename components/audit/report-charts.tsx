@@ -16,7 +16,7 @@ const rejectionConfig: ChartConfig = {
 
 export function RejectionTrendChart() {
   return (
-    <ChartContainer config={rejectionConfig} className="h-[200px] w-full">
+    <ChartContainer config={rejectionConfig} className="h-[280px] w-full">
       <AreaChart data={rejectionTrend} margin={{ left: 0, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
@@ -50,7 +50,7 @@ const prepTimeConfig: ChartConfig = {
 
 export function PrepTimeTrendChart() {
   return (
-    <ChartContainer config={prepTimeConfig} className="h-[200px] w-full">
+    <ChartContainer config={prepTimeConfig} className="h-[280px] w-full">
       <LineChart data={prepTimeTrend} margin={{ left: 0, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
@@ -81,7 +81,7 @@ const turnaroundConfig: ChartConfig = {
 
 export function QueryTurnaroundChart() {
   return (
-    <ChartContainer config={turnaroundConfig} className="h-[200px] w-full">
+    <ChartContainer config={turnaroundConfig} className="h-[280px] w-full">
       <BarChart data={queryTurnaroundBuckets} margin={{ left: 0, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
@@ -106,7 +106,7 @@ const clearanceConfig: ChartConfig = {
 
 export function TimeToClearanceChart() {
   return (
-    <ChartContainer config={clearanceConfig} className="h-[220px] w-full">
+    <ChartContainer config={clearanceConfig} className="h-[300px] w-full">
       <LineChart data={timeToClearance} margin={{ left: 0, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis
@@ -144,7 +144,7 @@ const breachConfig: ChartConfig = {
 
 export function DeadlineBreachChart() {
   return (
-    <ChartContainer config={breachConfig} className="h-[160px] w-full">
+    <ChartContainer config={breachConfig} className="h-[240px] w-full">
       <BarChart data={deadlineBreaches} margin={{ left: 0, right: 8, top: 8 }}>
         <CartesianGrid vertical={false} stroke="var(--border)" />
         <XAxis

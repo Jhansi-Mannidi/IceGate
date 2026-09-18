@@ -35,13 +35,13 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { AppShell } from "@/components/shell/app-shell"
 import { AiBadge } from "@/components/icegate/ai-badge"
 import { KpiCard } from "@/components/icegate/kpi-card"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { pipelineDocuments, docCodeDirectory, type PipelineDocument } from "@/lib/mock/documents-data"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 const STAGE_CONFIG: Record<
   PipelineDocument["stage"],
@@ -63,12 +63,35 @@ export default function DocumentsPage() {
   const router = useRouter()
   const { device } = useMock()
 
+  const [docs, setDocs] = React.useState<PipelineDocument[]>(pipelineDocuments)
   const [stageTab, setStageTab] = React.useState<"all" | PipelineDocument["stage"]>("all")
   const [query, setQuery] = React.useState("")
   const [clientFilter, setClientFilter] = React.useState<string[]>([])
   const [codeFilter, setCodeFilter] = React.useState<string[]>([])
+  const uploadInputRef = React.useRef<HTMLInputElement>(null)
 
-  const filtered = pipelineDocuments.filter((d) => {
+  function handleUploadFiles(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    const newDocs: PipelineDocument[] = files.map((file, i) => ({
+      id: `DOC-UP-${Date.now()}-${i}`,
+      fileName: file.name,
+      jobId: "",
+      client: "—",
+      docCode: "UNCLASSIFIED",
+      docName: "Pending classification",
+      aiProposed: false,
+      stage: "queued",
+      sizeBeforeKb: Math.max(1, Math.round(file.size / 1024)),
+      uploadedAt: new Date().toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }),
+      uploadedBy: "You",
+    }))
+    setDocs((prev) => [...newDocs, ...prev])
+    toast.success(`${files.length} document${files.length === 1 ? "" : "s"} queued for AI classification`)
+    e.target.value = ""
+  }
+
+  const filtered = docs.filter((d) => {
     if (stageTab !== "all" && d.stage !== stageTab) return false
     if (
       query &&
@@ -81,19 +104,19 @@ export default function DocumentsPage() {
   })
 
   const stageCounts = React.useMemo(() => {
-    const counts: Record<string, number> = { all: pipelineDocuments.length }
-    for (const d of pipelineDocuments) counts[d.stage] = (counts[d.stage] ?? 0) + 1
+    const counts: Record<string, number> = { all: docs.length }
+    for (const d of docs) counts[d.stage] = (counts[d.stage] ?? 0) + 1
     return counts
-  }, [])
+  }, [docs])
 
   const failedCount = stageCounts.failed ?? 0
   const queuedCount = stageCounts.queued ?? 0
   const uploadedCount = stageCounts.uploaded ?? 0
   const avgCompression = Math.round(
-    (pipelineDocuments
+    (docs
       .filter((d) => d.sizeAfterKb)
       .reduce((sum, d) => sum + (1 - d.sizeAfterKb! / d.sizeBeforeKb) * 100, 0) /
-      pipelineDocuments.filter((d) => d.sizeAfterKb).length) *
+      docs.filter((d) => d.sizeAfterKb).length) *
       10,
   ) / 10
 
@@ -158,8 +181,7 @@ export default function DocumentsPage() {
   )
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-4 p-4 @md:p-6">
+      <div className="flex flex-col gap-3 p-3 @md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-balance">e-Sanchit Documents</h1>
@@ -167,7 +189,8 @@ export default function DocumentsPage() {
               AI classification, normalisation, DSC signing, and upload pipeline
             </p>
           </div>
-          <Button>
+          <input ref={uploadInputRef} type="file" multiple className="hidden" onChange={handleUploadFiles} />
+          <Button onClick={() => uploadInputRef.current?.click()}>
             <Upload data-icon="inline-start" />
             Upload documents
           </Button>
@@ -266,7 +289,7 @@ export default function DocumentsPage() {
             <p className="text-sm text-muted-foreground">Try clearing a filter or searching a different term.</p>
           </div>
         ) : device === "desktop" ? (
-          <div className="rounded-lg border border-border">
+          <div className="rounded-lg border border-border shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -287,15 +310,17 @@ export default function DocumentsPage() {
                   return (
                     <TableRow
                       key={doc.id}
-                      className="cursor-pointer"
-                      onClick={() => router.push(`/jobs/${doc.jobId}`)}
+                      className={cn(doc.jobId && "cursor-pointer")}
+                      onClick={() => doc.jobId && router.push(`/jobs/${doc.jobId}`)}
                     >
                       <TableCell>
                         <div className="font-medium">{doc.fileName}</div>
                         <div className="text-xs text-muted-foreground">{doc.docName}</div>
                       </TableCell>
                       <TableCell>
-                        <div className="font-mono text-xs font-medium text-primary">{doc.jobId}</div>
+                        <div className="font-mono text-xs font-medium text-primary">
+                          {doc.jobId || "Unassigned"}
+                        </div>
                         <div className="text-xs text-muted-foreground">{doc.client}</div>
                       </TableCell>
                       <TableCell>
@@ -371,7 +396,7 @@ export default function DocumentsPage() {
               return (
                 <button
                   key={doc.id}
-                  onClick={() => router.push(`/jobs/${doc.jobId}`)}
+                  onClick={() => doc.jobId && router.push(`/jobs/${doc.jobId}`)}
                   className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left"
                 >
                   <div className="flex items-start justify-between gap-2">
@@ -390,7 +415,7 @@ export default function DocumentsPage() {
                     </span>
                   </div>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                    <span className="font-mono text-primary">{doc.jobId}</span>
+                    <span className="font-mono text-primary">{doc.jobId || "Unassigned"}</span>
                     <span>·</span>
                     <span>{doc.client}</span>
                   </div>
@@ -404,7 +429,7 @@ export default function DocumentsPage() {
           </div>
         )}
 
-        <div className="rounded-lg border border-border">
+        <div className="rounded-lg border border-border shadow-sm">
           <div className="border-b border-border px-4 py-3">
             <h2 className="text-sm font-semibold">Mandatory document code directory</h2>
             <p className="text-xs text-muted-foreground">
@@ -438,6 +463,5 @@ export default function DocumentsPage() {
           <TablePagination total={docCodeDirectory.length} />
         </div>
       </div>
-    </AppShell>
   )
 }

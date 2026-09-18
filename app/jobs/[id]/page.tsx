@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation"
+"use client"
+
+import { notFound, useParams } from "next/navigation"
 import { Download, MoreHorizontal, Copy, Ban } from "lucide-react"
-import { AppShell } from "@/components/shell/app-shell"
 import { JobBreadcrumb } from "@/components/declaration/job-breadcrumb"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -30,8 +31,8 @@ import {
   beLifecycle,
 } from "@/lib/mock/job-detail"
 
-export default async function JobDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params
+export default function JobDetailPage() {
+  const { id } = useParams<{ id: string }>()
   const job = getJob(id)
   if (!job) notFound()
 
@@ -39,9 +40,9 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
   const assessedTotal = job.state === "duty_paid" || job.state === "out_of_charge" ? 168430 : undefined
 
   return (
-    <AppShell>
+    <>
       <JobBreadcrumb jobId={job.id} />
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4 p-3 @md:p-4">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex flex-col gap-1.5">
           <div className="flex flex-wrap items-center gap-2">
@@ -57,8 +58,8 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             {job.category}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" className="gap-1.5">
+        <div className="flex items-center gap-2 print:hidden">
+          <Button variant="outline" className="gap-1.5" onClick={() => window.print()}>
             <Download data-icon="inline-start" />
             Export PDF
           </Button>
@@ -86,7 +87,7 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
 
       <div className="grid grid-cols-1 gap-5 @lg:grid-cols-[minmax(0,1fr)_320px]">
         <Tabs defaultValue="items">
-          <TabsList className="w-full justify-start overflow-x-auto">
+          <TabsList className="w-full justify-start overflow-x-auto print:hidden">
             <TabsTrigger value="header">Header</TabsTrigger>
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
             <TabsTrigger value="items">Items</TabsTrigger>
@@ -116,10 +117,12 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
             </TabsContent>
           </div>
 
-          <FooterActionBar blockingCount={blockingCount} />
+          <div className="print:hidden">
+            <FooterActionBar blockingCount={blockingCount} />
+          </div>
         </Tabs>
 
-        <aside className="flex flex-col gap-4">
+        <aside className="flex flex-col gap-4 print:hidden">
           <div className="rounded-xl border border-border bg-card p-4">
             <PreflightPanel rules={preflightRules} />
           </div>
@@ -148,6 +151,6 @@ export default async function JobDetailPage({ params }: { params: Promise<{ id: 
         </aside>
       </div>
       </div>
-    </AppShell>
+    </>
   )
 }

@@ -23,7 +23,7 @@ export function MobileBottomTabs() {
   const items = primaryNav.filter((item) => !item.roles || item.roles.includes(persona))
 
   return (
-    <nav className="flex h-16 shrink-0 items-center border-t border-border bg-surface">
+    <nav className="flex h-16 shrink-0 items-center border-t border-border bg-surface print:hidden">
       {mobileTabs.map((item) => {
         const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href.split("?")[0])
         return (

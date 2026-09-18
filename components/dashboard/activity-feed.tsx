@@ -2,14 +2,14 @@ import { activityFeed } from "@/lib/mock/data"
 import { timeAgo } from "@/lib/mock/time"
 import { cn } from "@/lib/utils"
 
-export function ActivityFeed() {
+export function ActivityFeed({ full = false }: { full?: boolean }) {
   return (
     <div className="rounded-lg border border-border bg-card">
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
         <p className="text-xs text-muted-foreground">Across all clients and ports</p>
       </div>
-      <ul className="max-h-[340px] overflow-y-auto mock-scrollbar">
+      <ul className={cn("mock-scrollbar", full ? "overflow-y-auto" : "max-h-[340px] overflow-y-auto")}>
         {activityFeed.map((a, i) => (
           <li key={i} className="flex gap-3 px-4 py-2.5">
             <span

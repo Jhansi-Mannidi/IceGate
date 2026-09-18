@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { AppShell } from "@/components/shell/app-shell"
+import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -48,11 +48,11 @@ function expiryTone(days: number) {
 }
 
 export default function AdminPage() {
+  useBreadcrumb([{ label: "Firm Admin" }])
   const [section, setSection] = useState<SubSection>("tenant")
 
   return (
-    <AppShell breadcrumbs={[{ label: "Home", href: "/" }, { label: "Firm Admin" }]}>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 p-3 @md:p-4">
         <div>
           <h1 className="text-xl font-semibold tracking-tight text-balance">Firm Admin Console</h1>
           <p className="text-sm text-muted-foreground">
@@ -105,7 +105,6 @@ export default function AdminPage() {
           </div>
         </div>
       </div>
-    </AppShell>
   )
 }
 
@@ -376,7 +375,7 @@ function ClientsKycSection() {
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         {clientsKyc.map((c) => (
-          <div key={c.iec} className="rounded-lg border border-border">
+          <div key={c.iec} className="rounded-lg border border-border shadow-sm">
             {c.filingBlocked && (
               <div className="flex items-center gap-2 rounded-t-lg border-b border-destructive/20 bg-destructive/10 px-4 py-2 text-sm text-destructive">
                 <TriangleAlert className="size-4 shrink-0" />

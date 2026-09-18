@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
-import { AppShell } from "@/components/shell/app-shell"
 import { StatusPill } from "@/components/icegate/status-pill"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { KpiCard } from "@/components/icegate/kpi-card"
@@ -24,6 +23,8 @@ import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { dutyLedger } from "@/lib/mock/data"
 import { formatInr } from "@/lib/mock/format"
+import { downloadCsv, timestampSlug } from "@/lib/mock/export"
+import { toast } from "sonner"
 
 const statuses = Array.from(new Set(dutyLedger.map((d) => d.status)))
 
@@ -47,6 +48,25 @@ export default function DutyPage() {
   const totalPaid = dutyLedger.filter((d) => d.status === "Paid").reduce((sum, d) => sum + d.assessedInr, 0)
   const overdueCount = dutyLedger.filter((d) => d.status === "Overdue").length
   const varianceTotal = dutyLedger.reduce((sum, d) => sum + (d.assessedInr - d.estimateInr), 0)
+
+  function handleExportLedger() {
+    downloadCsv(
+      `duty-ledger-${timestampSlug()}.csv`,
+      filtered.map((d) => ({
+        Job: d.job,
+        "BE No.": d.beNo,
+        Client: d.client,
+        BCD: d.bcd,
+        SWS: d.sws,
+        IGST: d.igst,
+        Cess: d.cess,
+        Estimate: d.estimateInr,
+        Assessed: d.assessedInr,
+        Status: d.status,
+      })),
+    )
+    toast.success(`Exported ${filtered.length} ledger row${filtered.length === 1 ? "" : "s"}`)
+  }
 
   const FilterControls = (
     <DropdownMenu>
@@ -79,8 +99,7 @@ export default function DutyPage() {
   )
 
   return (
-    <AppShell>
-      <div className="flex flex-col gap-4 p-4 @md:p-6">
+      <div className="flex flex-col gap-3 p-3 @md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-balance">Duty & Ledger</h1>
@@ -88,7 +107,7 @@ export default function DutyPage() {
               Estimated vs assessed duty, payment status, and statutory clocks
             </p>
           </div>
-          <Button variant="outline">
+          <Button variant="outline" onClick={handleExportLedger}>
             <Download data-icon="inline-start" />
             Export ledger
           </Button>
@@ -139,7 +158,7 @@ export default function DutyPage() {
         </div>
 
         {device === "desktop" ? (
-          <div className="rounded-lg border border-border">
+          <div className="rounded-lg border border-border shadow-sm">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -225,6 +244,5 @@ export default function DutyPage() {
           above ±₹500 triggers an automatic reconciliation flag in Audit & Reports.
         </div>
       </div>
-    </AppShell>
   )
 }

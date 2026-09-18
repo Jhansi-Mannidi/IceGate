@@ -52,6 +52,23 @@ export function MockProvider({ children }: { children: React.ReactNode }) {
     setMounted(true)
   }, [])
 
+  // Layout responds to the browser's actual width, like a real app —
+  // no manual device switcher.
+  React.useEffect(() => {
+    function computeDevice(): DeviceMode {
+      const w = window.innerWidth
+      if (w < 640) return "mobile"
+      if (w < 1024) return "tablet"
+      return "desktop"
+    }
+    function update() {
+      setDevice(computeDevice())
+    }
+    update()
+    window.addEventListener("resize", update)
+    return () => window.removeEventListener("resize", update)
+  }, [])
+
   const setTheme = React.useCallback((t: ThemeMode) => {
     setThemeState(t)
     document.documentElement.classList.toggle("dark", t === "dark")

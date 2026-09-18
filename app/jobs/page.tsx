@@ -38,7 +38,6 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
@@ -47,7 +46,6 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
-import { AppShell } from "@/components/shell/app-shell"
 import { StatusPill } from "@/components/icegate/status-pill"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
@@ -56,6 +54,8 @@ import { jobs, ports } from "@/lib/mock/data"
 import { formatInr, formatUsd } from "@/lib/mock/format"
 import { stateOptions } from "@/lib/mock/job-helpers"
 import { cn } from "@/lib/utils"
+import { downloadJson, timestampSlug } from "@/lib/mock/export"
+import { toast } from "sonner"
 
 const clients = Array.from(new Set(jobs.map((j) => j.client)))
 
@@ -65,24 +65,59 @@ export default function JobsPage() {
   const searchParams = useSearchParams()
   const { device } = useMock()
   const isApprovalsFilter = searchParams.get("filter") === "approvals"
+  const scopeParam = searchParams.get("scope")
 
-  const [scope, setScope] = React.useState<"mine" | "all">("all")
+  const [scope, setScope] = React.useState<"mine" | "all">(scopeParam === "mine" ? "mine" : "all")
   const [query, setQuery] = React.useState("")
   const [portFilter, setPortFilter] = React.useState<string[]>([])
   const [stateFilter, setStateFilter] = React.useState<string[]>(
     isApprovalsFilter ? ["DOCS_LINKED"] : [],
   )
   const [clientFilter, setClientFilter] = React.useState<string[]>([])
+  const [directionFilter, setDirectionFilter] = React.useState<string[]>([])
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [newJobOpen, setNewJobOpen] = React.useState(false)
+  const [mailboxOpen, setMailboxOpen] = React.useState(false)
+  const [mailboxConnected, setMailboxConnected] = React.useState(false)
+  const [mailboxEmail, setMailboxEmail] = React.useState("")
+
+  // Jobs is a single route with several sub-nav entries that only differ by
+  // query string (?scope=mine, ?filter=approvals) — the component instance
+  // is reused across those links, so the derived filters must resync here
+  // rather than only being set once via useState initializers.
+  React.useEffect(() => {
+    setStateFilter(isApprovalsFilter ? ["DOCS_LINKED"] : [])
+  }, [isApprovalsFilter])
+
+  React.useEffect(() => {
+    setScope(scopeParam === "mine" ? "mine" : "all")
+  }, [scopeParam])
 
   const filtered = jobs.filter((j) => {
+    if (scope === "mine" && j.assignedTo !== "Ravi Kulkarni") return false
     if (query && !`${j.id} ${j.client} ${j.iec}`.toLowerCase().includes(query.toLowerCase())) return false
     if (portFilter.length && !portFilter.includes(j.port)) return false
     if (stateFilter.length && !stateFilter.includes(j.state)) return false
     if (clientFilter.length && !clientFilter.includes(j.client)) return false
+    if (directionFilter.length && !directionFilter.includes(j.type)) return false
     return true
   })
+
+  function handleExportEvidencePack() {
+    const rows = jobs.filter((j) => selected.has(j.id))
+    downloadJson(`evidence-pack-${timestampSlug()}.json`, {
+      generatedAt: new Date().toISOString(),
+      jobs: rows,
+    })
+    toast.success(`Evidence pack exported for ${rows.length} job${rows.length === 1 ? "" : "s"}`)
+  }
+
+  function handleConnectMailbox(e: React.FormEvent) {
+    e.preventDefault()
+    setMailboxConnected(true)
+    setMailboxOpen(false)
+    toast.success(`Mailbox connected — scanning ${mailboxEmail} for new filings every 15 minutes`)
+  }
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -94,13 +129,19 @@ export default function JobsPage() {
   }
 
   const activeFilterCount =
-    (portFilter.length ? 1 : 0) + (stateFilter.length ? 1 : 0) + (clientFilter.length ? 1 : 0)
+    (portFilter.length ? 1 : 0) +
+    (stateFilter.length ? 1 : 0) +
+    (clientFilter.length ? 1 : 0) +
+    (directionFilter.length ? 1 : 0)
 
   const FilterControls = (
     <>
       <div className="flex items-center rounded-lg border border-border bg-muted p-0.5">
         <button
-          onClick={() => setScope("mine")}
+          onClick={() => {
+            setScope("mine")
+            router.push("/jobs?scope=mine")
+          }}
           className={cn(
             "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             scope === "mine" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
@@ -109,7 +150,10 @@ export default function JobsPage() {
           My jobs
         </button>
         <button
-          onClick={() => setScope("all")}
+          onClick={() => {
+            setScope("all")
+            router.push("/jobs")
+          }}
           className={cn(
             "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
             scope === "all" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground",
@@ -153,13 +197,32 @@ export default function JobsPage() {
           render={
             <Button variant="outline" size="sm">
               Direction
+              {directionFilter.length > 0 && <Badge variant="secondary">{directionFilter.length}</Badge>}
               <ChevronDown data-icon="inline-end" />
             </Button>
           }
         />
         <DropdownMenuContent align="start">
-          <DropdownMenuItem onClick={() => {}}>Import (BE)</DropdownMenuItem>
-          <DropdownMenuItem onClick={() => {}}>Export (SB)</DropdownMenuItem>
+          <DropdownMenuLabel>Filter by direction</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuCheckboxItem
+            checked={directionFilter.includes("BE")}
+            onCheckedChange={(checked) =>
+              setDirectionFilter((prev) => (checked ? [...prev, "BE"] : prev.filter((x) => x !== "BE")))
+            }
+            onSelect={(e) => e.preventDefault()}
+          >
+            Import (BE)
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuCheckboxItem
+            checked={directionFilter.includes("SB")}
+            onCheckedChange={(checked) =>
+              setDirectionFilter((prev) => (checked ? [...prev, "SB"] : prev.filter((x) => x !== "SB")))
+            }
+            onSelect={(e) => e.preventDefault()}
+          >
+            Export (SB)
+          </DropdownMenuCheckboxItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -232,8 +295,7 @@ export default function JobsPage() {
   )
 
   return (
-    <AppShell>
-    <div className="flex flex-col gap-4 p-4 @md:p-6">
+    <div className="flex flex-col gap-3 p-3 @md:p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-balance">Jobs & Declarations</h1>
@@ -242,9 +304,9 @@ export default function JobsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline">
+          <Button variant="outline" onClick={() => setMailboxOpen(true)}>
             <Upload data-icon="inline-start" />
-            Connect mailbox
+            {mailboxConnected ? "Mailbox connected" : "Connect mailbox"}
           </Button>
           <Dialog open={newJobOpen} onOpenChange={setNewJobOpen}>
             <DialogTrigger
@@ -255,7 +317,7 @@ export default function JobsPage() {
                 </Button>
               }
             />
-            <DialogContent className="@sm:max-w-lg">
+            <DialogContent className="sm:max-w-2xl">
               <DialogHeader>
                 <DialogTitle>Create a new job</DialogTitle>
                 <DialogDescription>
@@ -275,7 +337,7 @@ export default function JobsPage() {
                     className="flex flex-col items-start gap-2 rounded-lg border border-border p-4 text-left transition-colors hover:border-primary hover:bg-primary/5"
                     onClick={() => {
                       setNewJobOpen(false)
-                      router.push("/jobs/new")
+                      router.push(`/jobs/new?mode=${encodeURIComponent(opt.label)}`)
                     }}
                   >
                     <opt.icon className="size-5 text-primary" />
@@ -289,6 +351,34 @@ export default function JobsPage() {
                   Cancel
                 </Button>
               </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={mailboxOpen} onOpenChange={setMailboxOpen}>
+            <DialogContent className="sm:max-w-md">
+              <form onSubmit={handleConnectMailbox}>
+                <DialogHeader>
+                  <DialogTitle>Connect a mailbox</DialogTitle>
+                  <DialogDescription>
+                    We'll scan this inbox for shipment documents and auto-create draft jobs.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="py-2">
+                  <Input
+                    type="email"
+                    required
+                    value={mailboxEmail}
+                    onChange={(e) => setMailboxEmail(e.target.value)}
+                    placeholder="intake@yourfirm.com"
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setMailboxOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit">Connect</Button>
+                </DialogFooter>
+              </form>
             </DialogContent>
           </Dialog>
         </div>
@@ -333,7 +423,7 @@ export default function JobsPage() {
               <UserPlus data-icon="inline-start" />
               Assign to
             </Button>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" onClick={handleExportEvidencePack}>
               <Download data-icon="inline-start" />
               Export evidence pack
             </Button>
@@ -357,9 +447,9 @@ export default function JobsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => setMailboxOpen(true)}>
               <Mail data-icon="inline-start" />
-              Connect mailbox
+              {mailboxConnected ? "Mailbox connected" : "Connect mailbox"}
             </Button>
             <Button onClick={() => setNewJobOpen(true)}>
               <Plus data-icon="inline-start" />
@@ -368,7 +458,7 @@ export default function JobsPage() {
           </div>
         </div>
       ) : device === "desktop" ? (
-        <div className="rounded-lg border border-border">
+        <div className="rounded-lg border border-border shadow-sm">
           <Table>
             <TableHeader>
               <TableRow>
@@ -479,6 +569,5 @@ export default function JobsPage() {
         </div>
       )}
     </div>
-    </AppShell>
   )
 }

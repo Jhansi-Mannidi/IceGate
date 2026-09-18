@@ -50,8 +50,8 @@ export const primaryNav: NavItem[] = [
     icon: "home",
     subItems: [
       { label: "Overview", href: "/", description: "KPIs, filings and rejection trends", icon: "list" },
-      { label: "Deadline board", href: "/#deadlines", description: "Statutory clocks sorted by urgency", icon: "clock" },
-      { label: "Recent activity", href: "/#activity", description: "Latest actions across clients and ports", icon: "history" },
+      { label: "Deadline board", href: "/?view=deadlines", description: "Statutory clocks sorted by urgency", icon: "clock" },
+      { label: "Recent activity", href: "/?view=activity", description: "Latest actions across clients and ports", icon: "history" },
     ],
   },
   {
@@ -91,7 +91,7 @@ export const primaryNav: NavItem[] = [
     badge: 3,
     subItems: [
       { label: "Officer queries", href: "/queries", description: "Open queries across every job", icon: "alert" },
-      { label: "Deadline board", href: "/queries#deadline-board", description: "Statutory + SLA clocks", icon: "clock" },
+      { label: "Deadline board", href: "/queries?view=deadlines", description: "Statutory + SLA clocks", icon: "clock" },
     ],
   },
   {

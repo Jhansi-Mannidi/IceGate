@@ -3,7 +3,7 @@
 import * as React from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { useRouter, usePathname } from "next/navigation"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import {
   Bell,
@@ -14,15 +14,12 @@ import {
   Maximize,
   Minimize,
   Moon,
-  Search,
   Sun,
   UserCog,
 } from "lucide-react"
 import { useMock } from "@/lib/mock/providers"
-import { primaryNav } from "@/lib/mock/nav"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -31,52 +28,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog"
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import { jobs, notifications } from "@/lib/mock/data"
+import { notifications } from "@/lib/mock/data"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { timeAgo } from "@/lib/mock/time"
-import { OrgUnitSelector } from "./org-unit-selector"
 import { AppLauncher } from "./app-launcher"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 export function TopBar() {
   const { theme, setTheme, device, sidebarExpanded, setSidebarExpanded } = useMock()
   const router = useRouter()
-  const pathname = usePathname()
-  const activeNav =
-    primaryNav.find((item) =>
-      item.href === "/" ? pathname === "/" : pathname.startsWith(item.href.split("?")[0]),
-    ) ?? primaryNav[0]
-  const moduleLabel = activeNav.shortLabel ?? activeNav.label
-  const moduleCode = moduleLabel.slice(0, 2).toUpperCase()
-  const [searchOpen, setSearchOpen] = React.useState(false)
   const [launcherOpen, setLauncherOpen] = React.useState(false)
   const [fullscreen, setFullscreen] = React.useState(false)
   const unread = notifications.filter((n) => !n.read).length
   const compact = device !== "desktop"
-
-  React.useEffect(() => {
-    function onKeydown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault()
-        setSearchOpen(true)
-      }
-    }
-    window.addEventListener("keydown", onKeydown)
-    return () => window.removeEventListener("keydown", onKeydown)
-  }, [])
 
   function toggleFullscreen() {
     const el = document.documentElement
@@ -94,7 +58,7 @@ export function TopBar() {
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-      className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-3 @md:px-4"
+      className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-3 print:hidden @md:px-4"
     >
       {device === "mobile" && (
         <Link href="/" className="flex shrink-0 items-center" aria-label="VoltusFreight home">
@@ -154,33 +118,8 @@ export function TopBar() {
             <Home className="size-4" />
             Home
           </Button>
-
-          {!compact && (
-            <div className="hidden shrink-0 items-center gap-2 rounded-md border border-border px-2.5 py-1.5 @xl:flex">
-              <span className="size-2 rounded-full bg-status-success" />
-              <span className="flex size-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[10px] font-bold text-primary">
-                {moduleCode}
-              </span>
-              <span className="truncate text-sm font-medium text-foreground">{moduleLabel}</span>
-            </div>
-          )}
         </>
       )}
-
-      {!compact && <OrgUnitSelector />}
-
-      <button
-        type="button"
-        onClick={() => setSearchOpen(true)}
-        className="flex h-9 flex-1 shrink items-center gap-2 overflow-hidden rounded-md border border-border bg-muted px-3 text-sm text-muted-foreground @lg:max-w-xs"
-      >
-        <Search className="size-4 shrink-0" />
-        <span className="hidden truncate @lg:inline">Search job, BE/SB no., IEC…</span>
-        <span className="truncate @lg:hidden">Search</span>
-        <kbd className="ml-auto hidden shrink-0 rounded border border-border-strong bg-background px-1.5 py-0.5 text-[10px] font-medium @lg:inline">
-          ⌘K
-        </kbd>
-      </button>
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 @md:gap-2">
         {!compact && (
@@ -263,32 +202,6 @@ export function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      <Dialog open={searchOpen} onOpenChange={setSearchOpen}>
-        <DialogContent className="overflow-hidden p-0 sm:max-w-lg">
-          <DialogTitle className="sr-only">Search</DialogTitle>
-          <Command>
-            <CommandInput placeholder="Search by job ID, BE/SB number, IEC, container…" />
-            <CommandList>
-              <CommandEmpty>No results found.</CommandEmpty>
-              <CommandGroup heading="Jobs & Declarations">
-                {jobs.slice(0, 6).map((job) => (
-                  <CommandItem
-                    key={job.id}
-                    onSelect={() => {
-                      setSearchOpen(false)
-                      router.push(`/jobs/${job.id}`)
-                    }}
-                  >
-                    <span className="font-mono text-xs text-muted-foreground">{job.id}</span>
-                    <span className="ml-2 truncate">{job.client}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </DialogContent>
-      </Dialog>
 
       <AppLauncher open={launcherOpen} onOpenChange={setLauncherOpen} />
     </motion.header>
