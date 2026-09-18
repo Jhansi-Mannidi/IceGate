@@ -25,6 +25,14 @@ const startModes = [
 ]
 
 export default function NewJobPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <NewJobPageContent />
+    </React.Suspense>
+  )
+}
+
+function NewJobPageContent() {
   useBreadcrumb([{ label: "Jobs & Declarations", href: "/jobs" }, { label: "New Job" }])
   const router = useRouter()
   const searchParams = useSearchParams()

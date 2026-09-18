@@ -35,6 +35,14 @@ const types = Array.from(new Set(queryDesk.map((q) => q.type)))
 const owners = Array.from(new Set(queryDesk.map((q) => q.owner)))
 
 export default function QueriesPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <QueriesPageContent />
+    </React.Suspense>
+  )
+}
+
+function QueriesPageContent() {
   useBreadcrumb([{ label: "Query & Deadline Desk" }])
   const router = useRouter()
   const searchParams = useSearchParams()

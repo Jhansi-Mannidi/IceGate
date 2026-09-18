@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
@@ -91,13 +91,15 @@ export function SideNav() {
 
       {/* Secondary panel — module sub-navigation, desktop only, collapsible */}
       {showPanel && activeModule?.subItems && (
-        <SecondaryPanel
-          key={activeModule.href}
-          items={activeModule.subItems}
-          pathname={pathname}
-          query={panelQuery}
-          onQueryChange={setPanelQuery}
-        />
+        <Suspense fallback={null}>
+          <SecondaryPanel
+            key={activeModule.href}
+            items={activeModule.subItems}
+            pathname={pathname}
+            query={panelQuery}
+            onQueryChange={setPanelQuery}
+          />
+        </Suspense>
       )}
     </div>
   )

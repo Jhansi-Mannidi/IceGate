@@ -60,6 +60,14 @@ import { toast } from "sonner"
 const clients = Array.from(new Set(jobs.map((j) => j.client)))
 
 export default function JobsPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <JobsPageContent />
+    </React.Suspense>
+  )
+}
+
+function JobsPageContent() {
   useBreadcrumb([{ label: "Jobs & Declarations" }])
   const router = useRouter()
   const searchParams = useSearchParams()
