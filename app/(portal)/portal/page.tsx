@@ -27,6 +27,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PortalStatusPill } from "@/components/icegate/portal-status-pill"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { formatInr } from "@/lib/mock/format"
 import { formatDueInstant } from "@/lib/mock/time"
@@ -72,6 +73,7 @@ export default function ClientPortalPage() {
 }
 
 function ClientPortalPageContent() {
+  useBreadcrumb([{ label: "Client Portal" }])
   const { device } = useMock()
   const searchParams = useSearchParams()
   const tabParam = searchParams.get("tab")
@@ -319,15 +321,18 @@ function ClientPortalPageContent() {
                 className="gap-0"
               >
                 <div className="border-b border-border px-5 pt-4">
-                  <TabsList variant="line" className="h-8 w-full justify-start gap-4 p-0">
-                    <TabsTrigger value="invoices" className="px-0">
+                  <TabsList
+                    variant="line"
+                    className="h-8 w-full max-w-full justify-start gap-4 overflow-x-auto p-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  >
+                    <TabsTrigger value="invoices" className="shrink-0 px-0 whitespace-nowrap">
                       Invoices
                     </TabsTrigger>
-                    <TabsTrigger value="documents" className="px-0">
+                    <TabsTrigger value="documents" className="shrink-0 px-0 whitespace-nowrap">
                       Documents
                     </TabsTrigger>
-                    <TabsTrigger value="approvals" className="px-0">
-                      Approval history
+                    <TabsTrigger value="approvals" className="shrink-0 px-0 whitespace-nowrap">
+                      History
                     </TabsTrigger>
                   </TabsList>
                 </div>
