@@ -14,6 +14,12 @@ import {
   FileSpreadsheet,
   PenLine,
   X,
+  MoreHorizontal,
+  ExternalLink,
+  Copy,
+  Ban,
+  FileSignature,
+  CheckCircle2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -40,6 +46,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
+  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
@@ -86,6 +93,8 @@ function JobsPageContent() {
   const [selected, setSelected] = React.useState<Set<string>>(new Set())
   const [newJobOpen, setNewJobOpen] = React.useState(false)
   const [mailboxOpen, setMailboxOpen] = React.useState(false)
+  const [bulkSignOpen, setBulkSignOpen] = React.useState(false)
+  const [bulkSignDone, setBulkSignDone] = React.useState(false)
   const [mailboxConnected, setMailboxConnected] = React.useState(false)
   const [mailboxEmail, setMailboxEmail] = React.useState("")
 
@@ -103,7 +112,7 @@ function JobsPageContent() {
 
   const filtered = jobs.filter((j) => {
     if (scope === "mine" && j.assignedTo !== "Ravi Kulkarni") return false
-    if (query && !`${j.id} ${j.client} ${j.iec}`.toLowerCase().includes(query.toLowerCase())) return false
+    if (query && !`${j.id} ${j.client} ${j.iec} ${j.beNo ?? ""}`.toLowerCase().includes(query.toLowerCase())) return false
     if (portFilter.length && !portFilter.includes(j.port)) return false
     if (stateFilter.length && !stateFilter.includes(j.state)) return false
     if (clientFilter.length && !clientFilter.includes(j.client)) return false
@@ -312,10 +321,6 @@ function JobsPageContent() {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setMailboxOpen(true)}>
-            <Upload data-icon="inline-start" />
-            {mailboxConnected ? "Mailbox connected" : "Connect mailbox"}
-          </Button>
           <Dialog open={newJobOpen} onOpenChange={setNewJobOpen}>
             <DialogTrigger
               render={
@@ -345,7 +350,11 @@ function JobsPageContent() {
                     className="flex flex-col items-start gap-2 rounded-lg border border-border p-4 text-left transition-colors hover:border-primary hover:bg-primary/5"
                     onClick={() => {
                       setNewJobOpen(false)
-                      router.push(`/jobs/new?mode=${encodeURIComponent(opt.label)}`)
+                      if (opt.label === "From Email") {
+                        setMailboxOpen(true)
+                      } else {
+                        router.push(`/jobs/new?mode=${encodeURIComponent(opt.label)}`)
+                      }
                     }}
                   >
                     <opt.icon className="size-5 text-primary" />
@@ -397,7 +406,8 @@ function JobsPageContent() {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search job, BE/SB no., IEC, client, IRN…"
+          aria-label="Search jobs"
+            placeholder="Search job, BE/SB no., IEC, client, IRN…"
           className="pl-9"
         />
       </div>
@@ -427,6 +437,10 @@ function JobsPageContent() {
         <div className="flex items-center justify-between rounded-lg border border-primary/30 bg-primary/5 px-4 py-2.5">
           <span className="text-sm font-medium">{selected.size} selected</span>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setBulkSignOpen(true)}>
+              <FileSignature data-icon="inline-start" />
+              Sign selected
+            </Button>
             <Button variant="outline" size="sm">
               <UserPlus data-icon="inline-start" />
               Assign to
@@ -439,12 +453,53 @@ function JobsPageContent() {
               <Tag data-icon="inline-start" />
               Bulk-tag
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => setSelected(new Set())}>
+            <Button variant="ghost" size="icon" onClick={() => setSelected(new Set())} aria-label="Clear selection">
               <X />
             </Button>
           </div>
         </div>
       )}
+
+      <Dialog open={bulkSignOpen} onOpenChange={(open) => { setBulkSignOpen(open); if (!open) setBulkSignDone(false) }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Bulk DSC signing</DialogTitle>
+            <DialogDescription>
+              One token insertion signs every selected declaration — insert your token once, then confirm.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-1.5 rounded-lg border border-border bg-muted/30 p-3 text-xs">
+            {[...selected].map((id) => (
+              <div key={id} className="flex items-center justify-between">
+                <span className="font-mono">{id}</span>
+                {bulkSignDone ? (
+                  <span className="flex items-center gap-1 text-status-success">
+                    <CheckCircle2 className="size-3.5" />
+                    Signed
+                  </span>
+                ) : (
+                  <span className="text-muted-foreground">Pending signature</span>
+                )}
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkSignOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={bulkSignDone}
+              onClick={() => {
+                setBulkSignDone(true)
+                toast.success(`Signed ${selected.size} declaration${selected.size === 1 ? "" : "s"} with one DSC session`)
+              }}
+            >
+              <FileSignature data-icon="inline-start" />
+              Insert token &amp; sign all
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed border-border py-20 text-center">
@@ -479,6 +534,7 @@ function JobsPageContent() {
                   />
                 </TableHead>
                 <TableHead>Job ID</TableHead>
+                <TableHead>BE/SB No.</TableHead>
                 <TableHead>Client</TableHead>
                 <TableHead>Type</TableHead>
                 <TableHead>Port</TableHead>
@@ -487,19 +543,23 @@ function JobsPageContent() {
                 <TableHead>Assigned to</TableHead>
                 <TableHead>Clock</TableHead>
                 <TableHead>Last updated</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {filtered.map((job) => (
                 <TableRow
                   key={job.id}
-                  className="cursor-pointer"
+                  className="group cursor-pointer"
                   onClick={() => router.push(`/jobs/${job.id}`)}
                 >
                   <TableCell onClick={(e) => e.stopPropagation()}>
                     <Checkbox checked={selected.has(job.id)} onCheckedChange={() => toggleSelect(job.id)} />
                   </TableCell>
                   <TableCell className="font-mono text-xs font-medium text-primary">{job.id}</TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {job.beNo ?? <span className="text-muted-foreground">—</span>}
+                  </TableCell>
                   <TableCell>
                     <div className="font-medium">{job.client}</div>
                     <div className="font-mono text-xs text-muted-foreground">{job.iec}</div>
@@ -535,6 +595,39 @@ function JobsPageContent() {
                   <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                     {job.updatedAt}
                   </TableCell>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[popup-open]:opacity-100"
+                            aria-label={`Actions for ${job.id}`}
+                          />
+                        }
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => router.push(`/jobs/${job.id}`)}>
+                          <ExternalLink data-icon="inline-start" />
+                          Open
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toast.success(`Cloned ${job.id} as a new draft`)}>
+                          <Copy data-icon="inline-start" />
+                          Clone as new version
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toast.success(`Cancellation requested for ${job.id}`)}
+                          className="text-status-danger"
+                        >
+                          <Ban data-icon="inline-start" />
+                          Cancel job
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -562,6 +655,12 @@ function JobsPageContent() {
                 <span className="font-mono">{job.type}</span>
                 <span>·</span>
                 <span>{job.subType}</span>
+                {job.beNo && (
+                  <>
+                    <span>·</span>
+                    <span className="font-mono">{job.beNo}</span>
+                  </>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">

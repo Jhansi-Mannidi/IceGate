@@ -81,6 +81,7 @@ export function AppLauncher({ open, onOpenChange }: { open: boolean; onOpenChang
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search apps…"
+              aria-label="Search apps"
               className="h-full border-0 bg-transparent p-0 text-sm shadow-none focus-visible:ring-0"
             />
           </div>

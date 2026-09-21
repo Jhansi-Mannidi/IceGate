@@ -14,9 +14,9 @@ import { Button } from "@/components/ui/button"
 import { kpis, tenant } from "@/lib/mock/data"
 
 const quickActions = [
-  { label: "New declaration", href: "/jobs/new", icon: Plus },
+  { label: "New job", href: "/jobs/new", icon: Plus },
   { label: "Upload documents", href: "/documents", icon: Upload },
-  { label: "Pay duty", href: "/duty", icon: Wallet },
+  { label: "View duty ledger", href: "/duty", icon: Wallet },
   { label: "Open queries", href: "/queries", icon: FileWarning },
 ]
 

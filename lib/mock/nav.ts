@@ -114,6 +114,7 @@ export const primaryNav: NavItem[] = [
       { label: "Overview", href: "/portal", description: "Client snapshot and pending approvals", icon: "users" },
       { label: "Invoices", href: "/portal?tab=invoices", description: "Broker fees and duty invoices", icon: "receipt" },
       { label: "Documents", href: "/portal?tab=documents", description: "Shared filing documents", icon: "file-check" },
+      { label: "Approval history", href: "/portal?tab=approvals", description: "Your recorded approval decisions", icon: "check-check" },
     ],
   },
   {

@@ -3,9 +3,11 @@ import type {
   DeclarationItem,
   Invoice,
   JobDocument,
+  JobVersion,
   MandatoryDocCode,
   PreflightRule,
   TimelineNode,
+  TransmissionAttempt,
 } from "./types"
 import { jobs } from "./data"
 
@@ -107,44 +109,94 @@ export const preflightRules: PreflightRule[] = [
   {
     id: "RULE-1",
     severity: "block",
-    message: "Line item 2 has no confirmed CTH. Accept or override the AI suggestion before filing.",
+    message: "Line item 2 has no confirmed CTH.",
+    remediation: "Accept or override the AI suggestion on the Items tab before filing.",
     field: "Item 2 · CTH",
     tab: "items",
+    overridable: true,
   },
   {
     id: "RULE-2",
     severity: "block",
     message: "Certificate of Origin (doc code 856) is mandatory for CTH 85177090 under this notification and is not linked.",
+    remediation: "Link an existing e-Sanchit IRN or upload the certificate on the Documents tab.",
     field: "Documents · 856",
     tab: "documents",
+    overridable: true,
   },
   {
     id: "RULE-3",
     severity: "warn",
-    message: "Assessable value arithmetic differs from invoice + freight + insurance by ₹840 (tolerance ±₹1). Provide a reason to override.",
+    message: "Assessable value arithmetic differs from invoice + freight + insurance by ₹840 (tolerance ±₹1).",
+    remediation: "Recheck the freight/insurance entries on the Invoices tab, or override with a reason.",
     field: "Invoice · Assessable value",
     tab: "invoices",
+    overridable: true,
   },
   {
     id: "RULE-4",
     severity: "warn",
     message: "GSTIN checksum passes but branch code on this GSTIN does not match the declared importer branch.",
+    remediation: "Confirm the branch on the Header tab, or override with a reason if the mismatch is expected.",
     field: "Header · GSTIN",
     tab: "header",
+    overridable: true,
   },
   {
     id: "RULE-5",
     severity: "log",
     message: "CB is registered at this port (INNSA1) — no action needed.",
+    remediation: "None.",
     field: "Header · CB code",
     tab: "header",
+    overridable: false,
   },
   {
     id: "RULE-6",
     severity: "log",
     message: "Port code INNSA1 verified against customs location master (last synced 17 Sep 2026, 06:00 IST).",
+    remediation: "None.",
     field: "Header · Port",
     tab: "header",
+    overridable: false,
+  },
+]
+
+export const jobVersions: JobVersion[] = [
+  {
+    version: 1,
+    createdAt: "14 Sep 2026, 10:02 IST",
+    createdBy: "Meena Shah",
+    summary: "Initial draft created from ERP feed.",
+  },
+  {
+    version: 2,
+    createdAt: "15 Sep 2026, 09:45 IST",
+    createdBy: "Meena Shah",
+    summary: "AI-suggested CTH applied for line item 2 pending officer query response.",
+  },
+  {
+    version: 3,
+    createdAt: "17 Sep 2026, 08:40 IST",
+    createdBy: "Meena Shah",
+    summary: "Query resolved; CTH confirmed for line item 2 and re-validated.",
+    approvedBy: "Ravi Kulkarni",
+    approvedAt: "17 Sep 2026, 08:55 IST",
+    filedAt: "17 Sep 2026, 09:02 IST",
+  },
+]
+
+export const transmissionAttempts: TransmissionAttempt[] = [
+  {
+    id: "TX-2026-004812-1",
+    version: 3,
+    attemptedAt: "17 Sep 2026, 09:02 IST",
+    channel: "Open API",
+    payloadChecksum: "sha256:8f2c4e1a9d6b0f7c3a55e8d21b6f904ac7e2d5b8f1a03c6e9d4b7a2f5c8e1d0b",
+    acknowledgement: "ACK-26091700456",
+    outcome: "Acknowledged",
+    operator: "Ravi Kulkarni",
+    durationMs: 1840,
   },
 ]
 
@@ -206,10 +258,10 @@ export const jobDocuments: JobDocument[] = [
     aiProposed: true,
     stage: "classified",
     sizeBeforeKb: 14200,
-    sizeAfterKb: 8700,
-    dpi: 180,
+    sizeAfterKb: 4300,
+    dpi: 200,
     splitRequired: true,
-    parts: 2,
+    parts: 5,
   },
   {
     id: "DOC-5",

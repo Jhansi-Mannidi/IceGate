@@ -11,12 +11,18 @@ export interface PipelineDocument {
   sizeBeforeKb: number
   sizeAfterKb?: number
   dpi?: number
+  /** Steps applied by the optimisation ladder, in order, ending at sizeAfterKb/dpi. */
+  optimisationSteps?: string[]
   signer?: string
   dscSerial?: string
   irn?: string
   drn?: string
   splitRequired?: boolean
   parts?: number
+  /** Manifest listing the parts of a split document; required once splitRequired is true. */
+  manifestId?: string
+  /** Set once a user has explicitly confirmed the split; undefined means confirmation is still pending. */
+  splitConfirmedBy?: string
   uploadedAt: string
   uploadedBy: string
   failReason?: string
@@ -35,6 +41,7 @@ export const pipelineDocuments: PipelineDocument[] = [
     sizeBeforeKb: 820,
     sizeAfterKb: 640,
     dpi: 300,
+    optimisationSteps: ["Converted to PDF/A (ISO 19005-2)", "Recompressed at 300 DPI"],
     signer: "Ravi Kulkarni",
     dscSerial: "4A:9F:2C:11:87:E0",
     irn: "IRN2609170001834762",
@@ -55,6 +62,7 @@ export const pipelineDocuments: PipelineDocument[] = [
     sizeBeforeKb: 410,
     sizeAfterKb: 340,
     dpi: 300,
+    optimisationSteps: ["Converted to PDF/A (ISO 19005-2)", "Recompressed at 300 DPI"],
     signer: "Ravi Kulkarni",
     dscSerial: "4A:9F:2C:11:87:E0",
     uploadedAt: "17 Sep 2026, 09:16 IST",
@@ -73,6 +81,7 @@ export const pipelineDocuments: PipelineDocument[] = [
     sizeBeforeKb: 1240,
     sizeAfterKb: 890,
     dpi: 220,
+    optimisationSteps: ["Converted to PDF/A (ISO 19005-2)", "Downsampled to 220 DPI", "Recompressed"],
     uploadedAt: "17 Sep 2026, 09:18 IST",
     uploadedBy: "Meena Shah",
   },
@@ -87,10 +96,16 @@ export const pipelineDocuments: PipelineDocument[] = [
     aiConfidence: 81,
     stage: "classified",
     sizeBeforeKb: 14200,
-    sizeAfterKb: 8700,
-    dpi: 180,
+    sizeAfterKb: 4300,
+    dpi: 200,
+    optimisationSteps: [
+      "Converted to PDF/A (ISO 19005-2)",
+      "Downsampled to 200 DPI (spec floor)",
+      "Recompressed",
+    ],
     splitRequired: true,
-    parts: 2,
+    parts: 5,
+    manifestId: "MAN-2026-0043",
     uploadedAt: "17 Sep 2026, 09:20 IST",
     uploadedBy: "Meena Shah",
   },
@@ -118,9 +133,11 @@ export const pipelineDocuments: PipelineDocument[] = [
     aiConfidence: 62,
     stage: "failed",
     sizeBeforeKb: 4400,
+    dpi: 150,
     uploadedAt: "17 Sep 2026, 08:02 IST",
     uploadedBy: "Meena Shah",
-    failReason: "Scan resolution below 200 DPI minimum for e-Sanchit upload. Re-scan at 300 DPI or greater.",
+    failReason:
+      "Scan resolution (150 DPI) is below the 200 DPI minimum required for e-Sanchit upload (PDF/A, ISO 19005-2). Re-scan at 200 DPI or greater.",
   },
   {
     id: "PD-7",
@@ -161,6 +178,7 @@ export const pipelineDocuments: PipelineDocument[] = [
     sizeBeforeKb: 220,
     sizeAfterKb: 190,
     dpi: 300,
+    optimisationSteps: ["Converted to PDF/A (ISO 19005-2)", "Recompressed at 300 DPI"],
     signer: "Arjun Nair",
     dscSerial: "7C:12:AE:90:33:B1",
     uploadedAt: "17 Sep 2026, 07:40 IST",
@@ -178,6 +196,7 @@ export const pipelineDocuments: PipelineDocument[] = [
     sizeBeforeKb: 180,
     sizeAfterKb: 160,
     dpi: 300,
+    optimisationSteps: ["Converted to PDF/A (ISO 19005-2)", "Recompressed at 300 DPI"],
     signer: "Meena Shah",
     dscSerial: "4A:9F:2C:11:87:E0",
     irn: "IRN2609140003881245",

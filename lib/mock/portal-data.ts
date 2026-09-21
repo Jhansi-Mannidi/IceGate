@@ -1,3 +1,5 @@
+import { formatInr } from "./format"
+
 export const portalClient = {
   name: "Anantara Electronics Pvt Ltd",
   iec: "ABCDE1234F",
@@ -10,6 +12,8 @@ export const portalClient = {
 
 export interface PendingApproval {
   job: string
+  clientRef: string
+  version: number
   type: string
   description: string
   port: string
@@ -23,6 +27,8 @@ export interface PendingApproval {
 export const pendingApprovals: PendingApproval[] = [
   {
     job: "JOB-2026-004812",
+    clientRef: "Shipment awaiting BE number",
+    version: 3,
     type: "Bill of Entry · Home Consumption",
     description: "3 line items · Consumer electronics, sub-assemblies",
     port: "Mumbai Sea (INNSA1)",
@@ -34,6 +40,8 @@ export const pendingApprovals: PendingApproval[] = [
   },
   {
     job: "JOB-2026-004815",
+    clientRef: "Shipment awaiting BE number",
+    version: 1,
     type: "Bill of Entry · Free Shipping",
     description: "1 line item · Replacement parts, no commercial value",
     port: "Mumbai Sea (INNSA1)",
@@ -45,8 +53,30 @@ export const pendingApprovals: PendingApproval[] = [
   },
 ]
 
+export interface ApprovalRecord {
+  job: string
+  decision: "approved" | "rejected"
+  by: string
+  at: string
+  versionApproved: number
+  versionHash: string
+  reason?: string
+}
+
+export const approvalHistory: ApprovalRecord[] = [
+  {
+    job: "JOB-2026-004690",
+    decision: "approved",
+    by: "You",
+    at: "04 Sep 2026, 18:02 IST",
+    versionApproved: 1,
+    versionHash: "sha256:2f61c8…a04e",
+  },
+]
+
 export interface PortalShipment {
   job: string
+  beNo?: string
   type: string
   port: string
   state: string
@@ -82,6 +112,7 @@ export const portalShipments: PortalShipment[] = [
   },
   {
     job: "JOB-2026-004690",
+    beNo: "4809988",
     type: "BE · Home Consumption",
     port: "Mumbai Sea",
     state: "OUT_OF_CHARGE",
@@ -93,6 +124,7 @@ export const portalShipments: PortalShipment[] = [
   },
   {
     job: "JOB-2026-004612",
+    beNo: "4795214",
     type: "BE · Home Consumption",
     port: "Mumbai Sea",
     state: "DUTY_PAID",
@@ -104,6 +136,7 @@ export const portalShipments: PortalShipment[] = [
   },
   {
     job: "JOB-2026-004558",
+    beNo: "4781093",
     type: "BE · Home Consumption",
     port: "Mumbai Sea",
     state: "LEO_GRANTED",
@@ -163,6 +196,7 @@ export const portalKpis = [
     value: String(pendingApprovals.length),
     delta: "Action needed",
     trend: "down" as const,
+    sentiment: "bad" as const,
     sparkline: [1, 2, 1, 3, 2, 1, 2, 1, 3, 2, 1, pendingApprovals.length],
   },
   {
@@ -174,9 +208,10 @@ export const portalKpis = [
   },
   {
     label: "Duty due this week",
-    value: `₹${((184600 + 41200) / 100000).toFixed(2)}L`,
+    value: formatInr(184600 + 41200, { withSymbol: true }),
     delta: "2 invoices",
     trend: "down" as const,
+    sentiment: "bad" as const,
     sparkline: [1.2, 1.5, 1.3, 1.8, 1.6, 2.0, 1.9, 2.1, 2.0, 2.3, 2.1, 2.26],
   },
   {

@@ -161,6 +161,7 @@ export function OrgUnitSelector({ compact = false }: { compact?: boolean }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search org units…"
+              aria-label="Search org units"
               className="h-full border-0 bg-transparent p-0 text-xs shadow-none focus-visible:ring-0"
             />
           </div>

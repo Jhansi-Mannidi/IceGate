@@ -1,11 +1,20 @@
 "use client"
 
-import { Suspense } from "react"
+import { Suspense, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -22,7 +31,8 @@ import {
   type Capability,
 } from "@/lib/mock/admin-data"
 import { cn } from "@/lib/utils"
-import { RotateCw, ShieldAlert, Plus, TriangleAlert } from "lucide-react"
+import { RotateCw, ShieldAlert, Plus, TriangleAlert, Mail } from "lucide-react"
+import { toast } from "sonner"
 
 type SubSection = "tenant" | "ports" | "dsc" | "channels" | "clients" | "users"
 
@@ -217,7 +227,9 @@ function DscSection() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Signatory</TableHead>
+              <TableHead className="sticky left-0 z-10 bg-card shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                Signatory
+              </TableHead>
               <TableHead>DSC serial</TableHead>
               <TableHead>Issuer</TableHead>
               <TableHead>Valid to</TableHead>
@@ -228,7 +240,7 @@ function DscSection() {
           <TableBody>
             {adminSignatories.map((s) => (
               <TableRow key={s.dscSerial}>
-                <TableCell>
+                <TableCell className="sticky left-0 z-10 bg-card shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                   <div className="font-medium">{s.name}</div>
                   <div className="text-xs text-muted-foreground">{s.role}</div>
                 </TableCell>
@@ -273,14 +285,78 @@ function DscSection() {
 }
 
 function healthTone(health: "Healthy" | "Degraded" | "Down") {
-  if (health === "Healthy") return "bg-chart-2/15 text-chart-2"
-  if (health === "Degraded") return "bg-chart-4/15 text-chart-4"
-  return "bg-destructive/15 text-destructive"
+  if (health === "Healthy") return "bg-status-success-bg text-status-success"
+  if (health === "Degraded") return "bg-status-warning-bg text-status-warning"
+  return "bg-status-danger-bg text-status-danger"
 }
 
 function ChannelsSection() {
+  const [mailboxOpen, setMailboxOpen] = useState(false)
+  const [mailboxConnected, setMailboxConnected] = useState(false)
+  const [mailboxEmail, setMailboxEmail] = useState("")
+
   return (
     <div className="flex flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Email intake</CardTitle>
+          <CardDescription>
+            Scans a mailbox for shipment documents and auto-creates draft jobs. Also offered from the new-job flow.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-2 rounded-lg border border-border p-3 @sm:flex-row @sm:items-center @sm:justify-between">
+            <div>
+              <div className="text-sm font-medium">
+                {mailboxConnected ? mailboxEmail : "No mailbox connected"}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {mailboxConnected ? "Scanning every 15 minutes" : "Connect an intake inbox to enable email-based job creation"}
+              </div>
+            </div>
+            <Button variant="outline" size="sm" onClick={() => setMailboxOpen(true)}>
+              <Mail data-icon="inline-start" />
+              {mailboxConnected ? "Manage mailbox" : "Connect mailbox"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={mailboxOpen} onOpenChange={setMailboxOpen}>
+        <DialogContent className="sm:max-w-md">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              setMailboxConnected(true)
+              setMailboxOpen(false)
+              toast.success(`Mailbox ${mailboxEmail} connected`)
+            }}
+          >
+            <DialogHeader>
+              <DialogTitle>Connect a mailbox</DialogTitle>
+              <DialogDescription>
+                We&apos;ll scan this inbox for shipment documents and auto-create draft jobs.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="py-2">
+              <Input
+                type="email"
+                required
+                value={mailboxEmail}
+                onChange={(e) => setMailboxEmail(e.target.value)}
+                placeholder="intake@yourfirm.com"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setMailboxOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Connect</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <Card>
         <CardHeader>
           <CardTitle>Channel & Credentials</CardTitle>

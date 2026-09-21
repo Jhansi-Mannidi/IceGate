@@ -19,6 +19,11 @@ export type JobState =
   | "VALIDATED"
   | "DOCS_LINKED"
   | "READY_TO_FILE"
+  | "AWAITING_APPROVAL"
+  | "APPROVED"
+  | "SIGNED"
+  | "TRANSMITTED"
+  | "ACKNOWLEDGED"
   | "SUBMITTED"
   | "NUMBER_GENERATED"
   | "UNDER_APPRAISEMENT"
@@ -43,6 +48,8 @@ export interface Job {
   port: string
   portName: string
   state: JobState
+  /** BE or SB number once allotted by ICES; undefined/blank before that. */
+  beNo?: string
   version: number
   assignedTo: string
   assignedToInitials: string
@@ -114,8 +121,43 @@ export interface PreflightRule {
   id: string
   severity: PreflightSeverity
   message: string
+  /** What to do about it — shown separately from the cause (message). */
+  remediation: string
   field: string
   tab: "header" | "invoices" | "items" | "documents" | "duty"
+  /** Whether an authorised role may override this finding with a reason. Blocking rules on statutory data are not overridable. */
+  overridable: boolean
+}
+
+export interface PreflightOverride {
+  ruleId: string
+  reason: string
+  by: string
+  role: string
+  at: string
+}
+
+export interface JobVersion {
+  version: number
+  createdAt: string
+  createdBy: string
+  summary: string
+  approvedBy?: string
+  approvedAt?: string
+  filedAt?: string
+}
+
+export interface TransmissionAttempt {
+  id: string
+  version: number
+  attemptedAt: string
+  channel: string
+  payloadChecksum: string
+  acknowledgement?: string
+  outcome: "Acknowledged" | "Queued" | "Failed" | "Ambiguous"
+  operator: string
+  durationMs: number
+  note?: string
 }
 
 export type DocumentStage = "classified" | "normalised" | "signed" | "uploaded"

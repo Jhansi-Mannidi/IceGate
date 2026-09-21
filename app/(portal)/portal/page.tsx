@@ -1,10 +1,12 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import {
   Building2,
   Check,
   Download,
+  Eye,
   FileText,
   MessageSquare,
   ShieldCheck,
@@ -14,12 +16,20 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { StatusPill } from "@/components/icegate/status-pill"
-import { CountdownChip } from "@/components/icegate/countdown-chip"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
+import { PortalStatusPill } from "@/components/icegate/portal-status-pill"
 import { KpiCard } from "@/components/icegate/kpi-card"
-import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { formatInr } from "@/lib/mock/format"
+import { formatDueInstant } from "@/lib/mock/time"
 import {
   portalClient,
   portalKpis,
@@ -28,7 +38,11 @@ import {
   portalInvoices,
   portalDocuments,
   portalActivity,
+  approvalHistory as initialApprovalHistory,
+  type PendingApproval,
+  type ApprovalRecord,
 } from "@/lib/mock/portal-data"
+import { declarationItems, jobDocuments } from "@/lib/mock/job-detail"
 import { downloadText } from "@/lib/mock/export"
 import { toast } from "sonner"
 
@@ -45,13 +59,71 @@ function handleDownloadDocument(doc: (typeof portalDocuments)[number]) {
   toast.success(`Downloaded ${doc.name}`)
 }
 
+function versionHash() {
+  return `sha256:${Math.random().toString(16).slice(2, 8)}…${Math.random().toString(16).slice(2, 6)}`
+}
+
 export default function ClientPortalPage() {
-  useBreadcrumb([{ label: "Client Portal" }])
+  return (
+    <React.Suspense fallback={null}>
+      <ClientPortalPageContent />
+    </React.Suspense>
+  )
+}
+
+function ClientPortalPageContent() {
   const { device } = useMock()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab")
+  const initialTab = tabParam === "documents" ? "documents" : tabParam === "approvals" ? "approvals" : "invoices"
+  const [tab, setTab] = React.useState(initialTab)
+
+  // Same-route sub-nav links (?tab=invoices, ?tab=documents) reuse this component instance.
+  React.useEffect(() => {
+    setTab(initialTab)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tabParam])
 
   const [decided, setDecided] = React.useState<Record<string, "approved" | "rejected">>({})
+  const [history, setHistory] = React.useState<ApprovalRecord[]>(initialApprovalHistory)
+  const [reviewFor, setReviewFor] = React.useState<PendingApproval | null>(null)
+  const [rejectFor, setRejectFor] = React.useState<PendingApproval | null>(null)
+  const [rejectReason, setRejectReason] = React.useState("")
 
   const openApprovals = pendingApprovals.filter((a) => !decided[a.job])
+
+  function approve(a: PendingApproval) {
+    const record: ApprovalRecord = {
+      job: a.job,
+      decision: "approved",
+      by: "You",
+      at: "just now",
+      versionApproved: a.version,
+      versionHash: versionHash(),
+    }
+    setHistory((prev) => [record, ...prev])
+    setDecided((d) => ({ ...d, [a.job]: "approved" }))
+    setReviewFor(null)
+    toast.success(`Approved v${a.version} of ${a.job} — recorded with a version hash`)
+  }
+
+  function reject() {
+    if (!rejectFor || !rejectReason.trim()) return
+    const record: ApprovalRecord = {
+      job: rejectFor.job,
+      decision: "rejected",
+      by: "You",
+      at: "just now",
+      versionApproved: rejectFor.version,
+      versionHash: versionHash(),
+      reason: rejectReason.trim(),
+    }
+    setHistory((prev) => [record, ...prev])
+    setDecided((d) => ({ ...d, [rejectFor.job]: "rejected" }))
+    toast.success("Sent to your broker as a work item")
+    setRejectFor(null)
+    setRejectReason("")
+  }
 
   return (
       <div className="flex flex-col gap-4 p-3 @md:p-4">
@@ -120,15 +192,22 @@ export default function ClientPortalPage() {
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
-                            <span className="font-mono text-xs font-medium text-primary">{a.job}</span>
-                            <span className="text-xs text-muted-foreground">{a.type}</span>
+                            <span className="text-sm font-medium">{a.clientRef}</span>
+                            <span className="font-mono text-[11px] text-muted-foreground">{a.job}</span>
                           </div>
                           <p className="mt-1 text-sm text-pretty">{a.description}</p>
                           <p className="mt-1 text-xs text-muted-foreground">
                             {a.port} · Requested by {a.requestedBy} · {a.requestedAt}
                           </p>
                         </div>
-                        {!decision && <CountdownChip minutes={a.dueInMinutes} />}
+                        {!decision && (
+                          <span className="text-right text-xs text-muted-foreground">
+                            We need your decision by
+                            <br />
+                            <span className="font-medium text-foreground">{formatDueInstant(a.dueInMinutes)}</span>{" "}
+                            to file on time
+                          </span>
+                        )}
                       </div>
                       <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted/40 px-3 py-2">
                         <div className="flex items-center gap-4 text-xs">
@@ -146,25 +225,14 @@ export default function ClientPortalPage() {
                           </span>
                         </div>
                         {decision ? (
-                          <StatusPill state={decision === "approved" ? "DUTY_PAID" : "REJECTED"} />
+                          <Badge variant={decision === "approved" ? "secondary" : "destructive"}>
+                            {decision === "approved" ? "Approved" : "Rejected"}
+                          </Badge>
                         ) : (
                           <div className="flex items-center gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 border-status-danger/40 text-status-danger hover:bg-status-danger-bg"
-                              onClick={() => setDecided((d) => ({ ...d, [a.job]: "rejected" }))}
-                            >
-                              <X data-icon="inline-start" />
-                              Reject
-                            </Button>
-                            <Button
-                              size="sm"
-                              className="h-7"
-                              onClick={() => setDecided((d) => ({ ...d, [a.job]: "approved" }))}
-                            >
-                              <Check data-icon="inline-start" />
-                              Approve
+                            <Button size="sm" variant="outline" className="h-7" onClick={() => setReviewFor(a)}>
+                              <Eye data-icon="inline-start" />
+                              View what will be declared
                             </Button>
                           </div>
                         )}
@@ -190,7 +258,7 @@ export default function ClientPortalPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Job</TableHead>
+                      <TableHead>Reference</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Port</TableHead>
                       <TableHead>Value</TableHead>
@@ -202,7 +270,10 @@ export default function ClientPortalPage() {
                   <TableBody>
                     {portalShipments.map((s) => (
                       <TableRow key={s.job}>
-                        <TableCell className="font-mono text-xs font-medium text-primary">{s.job}</TableCell>
+                        <TableCell>
+                          <div className="font-mono text-xs font-medium">{s.beNo ?? "Awaiting BE number"}</div>
+                          <div className="font-mono text-[10px] text-muted-foreground">{s.job}</div>
+                        </TableCell>
                         <TableCell className="text-xs text-muted-foreground">{s.type}</TableCell>
                         <TableCell className="text-sm">{s.port}</TableCell>
                         <TableCell className="font-mono text-xs">
@@ -210,7 +281,7 @@ export default function ClientPortalPage() {
                         </TableCell>
                         <TableCell className="font-mono text-xs">{formatInr(s.dutyInr, { withSymbol: true })}</TableCell>
                         <TableCell>
-                          <StatusPill state={s.state} />
+                          <PortalStatusPill state={s.state} />
                         </TableCell>
                         <TableCell className="text-right text-xs text-muted-foreground">{s.updatedAt}</TableCell>
                       </TableRow>
@@ -223,10 +294,10 @@ export default function ClientPortalPage() {
                     <div key={s.job} className="flex flex-col gap-2 px-5 py-4">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <div className="font-mono text-xs font-medium text-primary">{s.job}</div>
+                          <div className="font-mono text-xs font-medium">{s.beNo ?? "Awaiting BE number"}</div>
                           <div className="text-xs text-muted-foreground">{s.type}</div>
                         </div>
-                        <StatusPill state={s.state} />
+                        <PortalStatusPill state={s.state} />
                       </div>
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground">{s.port}</span>
@@ -242,7 +313,11 @@ export default function ClientPortalPage() {
           {/* Right column */}
           <div className="flex flex-col gap-5">
             <section className="rounded-xl border border-border bg-card">
-              <Tabs defaultValue="invoices" className="gap-0">
+              <Tabs
+                value={tab}
+                onValueChange={(v) => setTab(v === "documents" ? "documents" : v === "approvals" ? "approvals" : "invoices")}
+                className="gap-0"
+              >
                 <div className="border-b border-border px-5 pt-4">
                   <TabsList variant="line" className="h-8 w-full justify-start gap-4 p-0">
                     <TabsTrigger value="invoices" className="px-0">
@@ -250,6 +325,9 @@ export default function ClientPortalPage() {
                     </TabsTrigger>
                     <TabsTrigger value="documents" className="px-0">
                       Documents
+                    </TabsTrigger>
+                    <TabsTrigger value="approvals" className="px-0">
+                      Approval history
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -266,7 +344,7 @@ export default function ClientPortalPage() {
                         <span className="font-mono text-sm font-medium">
                           {formatInr(inv.amountInr, { withSymbol: true })}
                         </span>
-                        <StatusPill state={inv.status === "Due" ? "Pending" : inv.status} />
+                        <Badge variant={inv.status === "Paid" ? "secondary" : "outline"}>{inv.status}</Badge>
                       </div>
                     </div>
                   ))}
@@ -295,6 +373,26 @@ export default function ClientPortalPage() {
                     </div>
                   ))}
                 </TabsContent>
+                <TabsContent value="approvals" className="flex flex-col divide-y divide-border px-5">
+                  {history.length === 0 && (
+                    <p className="py-4 text-sm text-muted-foreground">No approval decisions yet.</p>
+                  )}
+                  {history.map((h, i) => (
+                    <div key={i} className="flex flex-col gap-1 py-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono font-medium text-foreground">{h.job}</span>
+                        <Badge variant={h.decision === "approved" ? "secondary" : "destructive"}>
+                          {h.decision === "approved" ? "Approved" : "Rejected"}
+                        </Badge>
+                      </div>
+                      <span className="text-muted-foreground">
+                        v{h.versionApproved} · {h.by} · {h.at}
+                      </span>
+                      <span className="font-mono text-[10px] text-muted-foreground">{h.versionHash}</span>
+                      {h.reason && <span className="text-muted-foreground">Reason: {h.reason}</span>}
+                    </div>
+                  ))}
+                </TabsContent>
               </Tabs>
             </section>
 
@@ -319,6 +417,113 @@ export default function ClientPortalPage() {
             </section>
           </div>
         </div>
+
+        {/* What will be declared */}
+        <Dialog open={reviewFor !== null} onOpenChange={(open) => !open && setReviewFor(null)}>
+          <DialogContent className="max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>What will be declared</DialogTitle>
+              <DialogDescription>
+                Exactly what your broker will file with ICES for {reviewFor?.clientRef}. Approving records your
+                identity, the version and a hash of this content.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col gap-3 text-sm">
+              <div className="grid grid-cols-2 gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs">
+                <span className="text-muted-foreground">Importer</span>
+                <span className="text-right font-medium">{portalClient.name}</span>
+                <span className="text-muted-foreground">IEC</span>
+                <span className="text-right font-mono">{portalClient.iec}</span>
+                <span className="text-muted-foreground">Broker</span>
+                <span className="text-right font-medium">{portalClient.broker}</span>
+                <span className="text-muted-foreground">Port</span>
+                <span className="text-right">{reviewFor?.port}</span>
+              </div>
+
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-foreground">Line items</h4>
+                <div className="flex flex-col gap-1.5">
+                  {declarationItems.map((item) => (
+                    <div key={item.lineNo} className="flex items-center justify-between rounded border border-border px-2.5 py-1.5 text-xs">
+                      <span>
+                        #{item.lineNo} {item.description}
+                      </span>
+                      <span className="font-mono">{formatInr(item.assessableValueInr)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-foreground">Duty by head</h4>
+                <div className="grid grid-cols-4 gap-2 text-xs">
+                  {(["bcd", "sws", "igst", "cess"] as const).map((head) => (
+                    <div key={head} className="rounded border border-border px-2 py-1.5 text-center">
+                      <div className="text-[10px] uppercase text-muted-foreground">{head}</div>
+                      <div className="font-mono font-medium">
+                        {formatInr(declarationItems.reduce((sum, item) => sum + item[head], 0))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <h4 className="mb-1.5 text-xs font-semibold text-foreground">Documents relied on</h4>
+                <div className="flex flex-col gap-1">
+                  {jobDocuments.map((doc) => (
+                    <span key={doc.id} className="text-xs text-muted-foreground">
+                      {doc.docCode} — {doc.docName}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  if (reviewFor) setRejectFor(reviewFor)
+                  setReviewFor(null)
+                }}
+                className="text-status-danger hover:text-status-danger"
+              >
+                <X data-icon="inline-start" />
+                Reject
+              </Button>
+              <Button onClick={() => reviewFor && approve(reviewFor)}>
+                <Check data-icon="inline-start" />
+                Approve
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reject with reason */}
+        <Dialog open={rejectFor !== null} onOpenChange={(open) => !open && setRejectFor(null)}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject {rejectFor?.clientRef}</DialogTitle>
+              <DialogDescription>
+                This is sent to your broker as a work item — a reason is required so they know what to fix.
+              </DialogDescription>
+            </DialogHeader>
+            <Textarea
+              value={rejectReason}
+              onChange={(e) => setRejectReason(e.target.value)}
+              placeholder="What needs to change before you can approve this…"
+              rows={3}
+            />
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRejectFor(null)}>
+                Cancel
+              </Button>
+              <Button disabled={!rejectReason.trim()} onClick={reject} className="text-status-danger">
+                Send rejection to broker
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
   )
 }

@@ -19,6 +19,8 @@ import {
 } from "lucide-react"
 import { useMock } from "@/lib/mock/providers"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
+import { EnvironmentBadge } from "@/components/icegate/environment-badge"
+import { ChannelStatusBadge } from "@/components/icegate/channel-status-badge"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -61,11 +63,14 @@ export function TopBar() {
       className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-surface px-3 print:hidden @md:px-4"
     >
       {device === "mobile" && (
-        <Link href="/" className="flex shrink-0 items-center" aria-label="VoltusFreight home">
-          <div className="relative size-7 shrink-0">
-            <Image src="/images/voltusfreight-logo.png" alt="VoltusFreight" fill className="object-contain" />
-          </div>
-        </Link>
+        <>
+          <Link href="/" className="flex shrink-0 items-center" aria-label="VoltusFreight home">
+            <div className="relative size-7 shrink-0">
+              <Image src="/images/voltusfreight-logo.png" alt="VoltusFreight" fill className="object-contain" />
+            </div>
+          </Link>
+          <EnvironmentBadge />
+        </>
       )}
 
       {device !== "mobile" && (
@@ -78,6 +83,7 @@ export function TopBar() {
                   size="icon"
                   onClick={() => setSidebarExpanded(!sidebarExpanded)}
                   className={device === "tablet" ? "hidden" : undefined}
+                  aria-label={sidebarExpanded ? "Collapse sidebar" : "Expand sidebar"}
                 />
               }
             >
@@ -87,7 +93,16 @@ export function TopBar() {
           </Tooltip>
 
           <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" size="icon" onClick={() => setLauncherOpen(true)} />}>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setLauncherOpen(true)}
+                  aria-label="Application launcher"
+                />
+              }
+            >
               <Grid2x2 className="size-[18px]" />
             </TooltipTrigger>
             <TooltipContent side="bottom">Application launcher</TooltipContent>
@@ -106,6 +121,8 @@ export function TopBar() {
             </div>
           </Link>
 
+          <EnvironmentBadge />
+
           <div className="h-6 w-px shrink-0 bg-border" />
 
           <Button
@@ -122,20 +139,45 @@ export function TopBar() {
       )}
 
       <div className="ml-auto flex shrink-0 items-center gap-1.5 @md:gap-2">
+        <ChannelStatusBadge className="hidden @lg:inline-flex" />
+
         {!compact && (
-          <div className="hidden items-center gap-2 rounded-md border border-border px-2.5 py-1.5 @lg:flex">
-            <span className="size-2 rounded-full bg-status-success" />
-            <span className="text-xs text-muted-foreground">Signing agent: Ravi K.</span>
-          </div>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Link
+                  href="/admin?section=dsc"
+                  className="hidden items-center gap-2 rounded-md border border-border px-2.5 py-1.5 @lg:flex"
+                />
+              }
+            >
+              <span className="size-2 rounded-full bg-status-success" />
+              <span className="text-xs text-muted-foreground">LSA session: Ravi K. · 3h 5m</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-60">
+              Local Signing Agent token session for DSC signing — expires in 3h 5m, then re-insert the token to
+              sign again. Separate from certificate validity. View agent status →
+            </TooltipContent>
+          </Tooltip>
         )}
 
         <CountdownChip
           minutes={185}
+          label="Nearest deadline"
           className="hidden @lg:inline-flex"
         />
 
         <DropdownMenu>
-          <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="relative" />}>
+          <DropdownMenuTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="relative"
+                aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
+              />
+            }
+          >
             <Bell className="size-[18px]" />
             {unread > 0 && (
               <span className="absolute right-1.5 top-1.5 flex size-2 items-center justify-center rounded-full bg-status-danger" />
@@ -156,7 +198,16 @@ export function TopBar() {
 
         {!compact && (
           <Tooltip>
-            <TooltipTrigger render={<Button variant="ghost" size="icon" onClick={toggleFullscreen} />}>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleFullscreen}
+                  aria-label={fullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+                />
+              }
+            >
               {fullscreen ? <Minimize className="size-[18px]" /> : <Maximize className="size-[18px]" />}
             </TooltipTrigger>
             <TooltipContent side="bottom">{fullscreen ? "Exit fullscreen" : "Enter fullscreen"}</TooltipContent>
@@ -173,7 +224,11 @@ export function TopBar() {
         </Button>
 
         <DropdownMenu>
-          <DropdownMenuTrigger render={<button type="button" className="flex items-center gap-2 rounded-full" />}>
+          <DropdownMenuTrigger
+            render={
+              <button type="button" className="flex items-center gap-2 rounded-full" aria-label="Account menu" />
+            }
+          >
             <Avatar className="size-8">
               <AvatarFallback className="bg-primary text-xs font-semibold text-primary-foreground">
                 RK

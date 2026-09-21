@@ -77,6 +77,7 @@ export const jobs: Job[] = [
     port: "INNSA1",
     portName: "Mumbai Sea",
     state: "UNDER_APPRAISEMENT",
+    beNo: undefined,
     version: 3,
     assignedTo: "Meena Shah",
     assignedToInitials: "MS",
@@ -99,6 +100,7 @@ export const jobs: Job[] = [
     port: "INBOM4",
     portName: "Mumbai Air",
     state: "EXPORTED",
+    beNo: "4809215",
     version: 1,
     assignedTo: "Ravi Kulkarni",
     assignedToInitials: "RK",
@@ -117,6 +119,7 @@ export const jobs: Job[] = [
     port: "INNSA1",
     portName: "Mumbai Sea",
     state: "REJECTED",
+    beNo: "4816104",
     version: 2,
     assignedTo: "Meena Shah",
     assignedToInitials: "MS",
@@ -137,6 +140,7 @@ export const jobs: Job[] = [
     port: "INNSA1",
     portName: "Mumbai Sea",
     state: "TRANSMIT_FAILED",
+    beNo: undefined,
     version: 1,
     assignedTo: "Meena Shah",
     assignedToInitials: "MS",
@@ -155,6 +159,7 @@ export const jobs: Job[] = [
     port: "INTKD6",
     portName: "Delhi ICD",
     state: "READY_TO_FILE",
+    beNo: undefined,
     version: 1,
     assignedTo: "Arjun Nair",
     assignedToInitials: "AN",
@@ -173,6 +178,7 @@ export const jobs: Job[] = [
     port: "INMAA4",
     portName: "Chennai",
     state: "GOODS_REGISTERED",
+    beNo: "4818640",
     version: 1,
     assignedTo: "Arjun Nair",
     assignedToInitials: "AN",
@@ -193,6 +199,7 @@ export const jobs: Job[] = [
     port: "INBOM4",
     portName: "Mumbai Air",
     state: "DUTY_PAID",
+    beNo: "4817293",
     version: 1,
     assignedTo: "Meena Shah",
     assignedToInitials: "MS",
@@ -211,6 +218,7 @@ export const jobs: Job[] = [
     port: "INNSA1",
     portName: "Mumbai Sea",
     state: "OUT_OF_CHARGE",
+    beNo: "4815977",
     version: 1,
     assignedTo: "Ravi Kulkarni",
     assignedToInitials: "RK",
@@ -219,6 +227,27 @@ export const jobs: Job[] = [
     assessableValueUsd: 19400,
     assessableValueInr: 1615400,
     dutyEstimateInr: 84200,
+  },
+  {
+    id: "JOB-2026-004822",
+    type: "BE",
+    subType: "Home Consumption",
+    client: "Kavali Foods Ltd",
+    iec: "KVLFD5541M",
+    port: "INTKD6",
+    portName: "Delhi ICD",
+    state: "READY_TO_FILE",
+    beNo: undefined,
+    version: 1,
+    assignedTo: "Arjun Nair",
+    assignedToInitials: "AN",
+    updatedAt: "17 Sep 2026, 11:02 IST",
+    itemCount: 2,
+    assessableValueUsd: 14800,
+    assessableValueInr: 1233200,
+    dutyEstimateInr: 61200,
+    clockLabel: "Section 46 filing",
+    clockDueInMinutes: 45,
   },
 ]
 
@@ -262,6 +291,7 @@ export const kpis = [
     value: "341",
     delta: "+12%",
     trend: "up" as const,
+    sentiment: "good" as const,
     sparkline: [22, 26, 24, 30, 28, 34, 33, 38, 36, 41, 39, 45],
   },
   {
@@ -313,23 +343,209 @@ export const activityFeed = [
   { actor: "System", action: "granted Out of Charge for", target: "JOB-2026-004780", time: "12 Sep 2026, 17:55 IST" },
 ]
 
-export const deadlineBoard = [
-  { job: "JOB-2026-004812", client: "Anantara Electronics", type: "Section 47 duty", dueInMinutes: 192, exposureInr: 184600 },
-  { job: "JOB-2026-004821", client: "Coral Textiles", type: "Query SLA", dueInMinutes: 620, exposureInr: 0 },
-  { job: "JOB-2026-004822", client: "Kavali Foods Ltd", type: "Section 46 filing", dueInMinutes: 45, exposureInr: 0 },
-  { job: "JOB-2026-004815", client: "Anantara Electronics", type: "Section 46 filing", dueInMinutes: 260, exposureInr: 0 },
-  { job: "JOB-2026-004798-A", client: "Vantage Pharma", type: "Query SLA", dueInMinutes: 900, exposureInr: 0 },
+export type DeadlineMode = "Sea" | "Air" | "ICD" | "Land"
+
+export const deadlineBoard: {
+  job: string
+  client: string
+  type: string
+  dueInMinutes: number
+  exposureInr: number
+  mode: DeadlineMode
+  port: string
+}[] = [
+  { job: "JOB-2026-004812", client: "Anantara Electronics", type: "Section 47 duty", dueInMinutes: 192, exposureInr: 184600, mode: "Sea", port: "INNSA1" },
+  { job: "JOB-2026-004821", client: "Coral Textiles", type: "Query SLA", dueInMinutes: 620, exposureInr: 0, mode: "Sea", port: "INMAA4" },
+  { job: "JOB-2026-004822", client: "Kavali Foods Ltd", type: "Section 46 filing", dueInMinutes: 45, exposureInr: 0, mode: "ICD", port: "INTKD6" },
+  { job: "JOB-2026-004815", client: "Anantara Electronics", type: "Section 46 filing", dueInMinutes: 260, exposureInr: 0, mode: "Sea", port: "INNSA1" },
+  { job: "JOB-2026-004798-A", client: "Vantage Pharma", type: "Query SLA", dueInMinutes: 900, exposureInr: 0, mode: "Air", port: "INBOM4" },
 ]
 
-export const queryDesk = [
-  { job: "JOB-2026-004812", client: "Anantara Electronics", type: "Classification", excerpt: "Please clarify CTH for line item 2 — appears to be a sub-assembly, not a finished unit.", officerGroup: "Group 5A, INNSA1", owner: "Meena Shah", slaMinutes: 192 },
-  { job: "JOB-2026-004821", client: "Coral Textiles", type: "Document missing", excerpt: "Certificate of origin not linked for RoDTEP claim.", officerGroup: "Group 2, INMAA4", owner: "Arjun Nair", slaMinutes: 620 },
-  { job: "JOB-2026-004798-A", client: "Vantage Pharma", type: "Valuation", excerpt: "Freight component appears understated relative to declared Incoterms (CIF).", officerGroup: "SVB Cell", owner: "Meena Shah", slaMinutes: 900 },
+export interface QueryRound {
+  from: "officer" | "broker"
+  author: string
+  text: string
+  at: string
+}
+
+export interface QueryAiDraft {
+  text: string
+  provenance: string
+}
+
+export interface QueryItem {
+  job: string
+  client: string
+  declarationType: "BE" | "SB"
+  type: string
+  excerpt: string
+  officerGroup: string
+  owner: string
+  slaMinutes: number
+  /** 1-based line number this query is about, if any — the declaration context shown beside the query. */
+  lineItemRef?: number
+  rounds: QueryRound[]
+  aiDraft?: QueryAiDraft
+}
+
+export const queryDesk: QueryItem[] = [
+  {
+    job: "JOB-2026-004812",
+    client: "Anantara Electronics",
+    declarationType: "BE",
+    type: "Classification",
+    excerpt: "Please clarify CTH for line item 2 — appears to be a sub-assembly, not a finished unit.",
+    officerGroup: "Group 5A, INNSA1",
+    owner: "Meena Shah",
+    slaMinutes: 192,
+    lineItemRef: 2,
+    rounds: [
+      {
+        from: "officer",
+        author: "Group 5A, INNSA1",
+        text: "Please clarify CTH for line item 2 — appears to be a sub-assembly, not a finished unit.",
+        at: "17 Sep 2026, 09:30 IST",
+      },
+    ],
+    aiDraft: {
+      text: "Line item 2 (sub-assembly module, RF front-end, unmounted) is classified under CTH 85177090, matching the invoice description and prior filings for this IEC at the 4-digit heading level (8517). We confirm this classification and request assessment to proceed accordingly.",
+      provenance: "Drafted from the AI CTH suggestion (78% confidence, source: invoice_page2.pdf) — review before sending.",
+    },
+  },
+  {
+    job: "JOB-2026-004821",
+    client: "Coral Textiles",
+    declarationType: "SB",
+    type: "Document missing",
+    excerpt: "Certificate of origin not linked for RoDTEP claim.",
+    officerGroup: "Group 2, INMAA4",
+    owner: "Arjun Nair",
+    slaMinutes: 620,
+    rounds: [
+      {
+        from: "officer",
+        author: "Group 2, INMAA4",
+        text: "Certificate of origin not linked for RoDTEP claim.",
+        at: "17 Sep 2026, 07:55 IST",
+      },
+    ],
+  },
+  {
+    job: "JOB-2026-004798-A",
+    client: "Vantage Pharma",
+    declarationType: "BE",
+    type: "Valuation",
+    excerpt: "Freight component appears understated relative to declared Incoterms (CIF).",
+    officerGroup: "SVB Cell",
+    owner: "Meena Shah",
+    slaMinutes: 900,
+    rounds: [
+      {
+        from: "officer",
+        author: "SVB Cell",
+        text: "Freight component appears understated relative to declared Incoterms (CIF).",
+        at: "17 Sep 2026, 09:15 IST",
+      },
+    ],
+    aiDraft: {
+      text: "Freight has been corrected from ₹18,400 to ₹24,900 to match the CIF Incoterms on the commercial invoice; assessable value updated accordingly. See amendment AMD-2026-0094 for the field-level change and revised duty.",
+      provenance: "Drafted from amendment AMD-2026-0094 — review before sending.",
+    },
+  },
 ]
 
-export const dutyLedger = [
-  { job: "JOB-2026-004812", beNo: "—", client: "Anantara Electronics", bcd: 92300, sws: 9230, igst: 72200, cess: 10870, estimateInr: 184600, assessedInr: 184600, dueInMinutes: 192, status: "Pending" as const },
-  { job: "JOB-2026-004820", beNo: "—", client: "Kavali Foods Ltd", bcd: 69450, sws: 6945, igst: 54800, cess: 7705, estimateInr: 138900, assessedInr: 145200, dueInMinutes: 1380, status: "Pending" as const },
-  { job: "JOB-2026-004798", beNo: "4817293", client: "Vantage Pharma", bcd: 56200, sws: 5620, igst: 43900, cess: 6680, estimateInr: 112400, assessedInr: 112400, dueInMinutes: 0, status: "Paid" as const },
-  { job: "JOB-2026-004803", beNo: "4816104", client: "Nimbus Traders", bcd: 48250, sws: 4825, igst: 37700, cess: 5725, estimateInr: 96500, assessedInr: 101800, dueInMinutes: -2820, status: "Overdue" as const },
+export interface DutyHeadFigures {
+  bcd: number
+  sws: number
+  igst: number
+  cess: number
+}
+
+export interface DutyLedgerRow {
+  job: string
+  beNo: string
+  client: string
+  bcd: number
+  sws: number
+  igst: number
+  cess: number
+  /** Assessed head-by-head; equals the estimate heads until re-assessment diverges. */
+  assessedByHead: DutyHeadFigures
+  estimateInr: number
+  assessedInr: number
+  /** Notification + serial backing the BCD rate — the only head an exemption notification actually applies to. */
+  notification?: string
+  serial?: string
+  /** Populated from the inbound challan message (CHCAI04) once one exists — never entered by hand. */
+  challanNo?: string
+  divergenceNote: string
+  dueInMinutes: number
+  status: "Pending" | "Paid" | "Overdue"
+}
+
+export const dutyLedger: DutyLedgerRow[] = [
+  {
+    job: "JOB-2026-004812",
+    beNo: "—",
+    client: "Anantara Electronics",
+    bcd: 92300,
+    sws: 9230,
+    igst: 72200,
+    cess: 10870,
+    assessedByHead: { bcd: 92300, sws: 9230, igst: 72200, cess: 10870 },
+    estimateInr: 184600,
+    assessedInr: 184600,
+    notification: "50/2017-Cus",
+    serial: "512",
+    divergenceNote: "No divergence — estimate stands pending assessment.",
+    dueInMinutes: 192,
+    status: "Pending",
+  },
+  {
+    job: "JOB-2026-004820",
+    beNo: "—",
+    client: "Kavali Foods Ltd",
+    bcd: 69450,
+    sws: 6945,
+    igst: 54800,
+    cess: 7705,
+    assessedByHead: { bcd: 73450, sws: 7345, igst: 56700, cess: 7705 },
+    estimateInr: 138900,
+    assessedInr: 145200,
+    divergenceNote: "Provisional assessment applied ahead of filing — reconcile once the BE number is allotted.",
+    dueInMinutes: 1380,
+    status: "Pending",
+  },
+  {
+    job: "JOB-2026-004798",
+    beNo: "4817293",
+    client: "Vantage Pharma",
+    bcd: 56200,
+    sws: 5620,
+    igst: 43900,
+    cess: 6680,
+    assessedByHead: { bcd: 56200, sws: 5620, igst: 43900, cess: 6680 },
+    estimateInr: 112400,
+    assessedInr: 112400,
+    challanNo: "CHL26091400782",
+    divergenceNote: "No divergence — reconciled and paid.",
+    dueInMinutes: 0,
+    status: "Paid",
+  },
+  {
+    job: "JOB-2026-004803",
+    beNo: "4816104",
+    client: "Nimbus Traders",
+    bcd: 48250,
+    sws: 4825,
+    igst: 37700,
+    cess: 5725,
+    assessedByHead: { bcd: 48780, sws: 4878, igst: 38759, cess: 5725 },
+    estimateInr: 96500,
+    assessedInr: 98142,
+    challanNo: "CHL26091600914",
+    divergenceNote: "Re-assessed per AMD-2026-0091 — branch/IEC correction and a value delta of +₹5,300.",
+    dueInMinutes: -2820,
+    status: "Overdue",
+  },
 ]

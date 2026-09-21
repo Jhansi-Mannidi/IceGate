@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Upload,
   Search,
@@ -13,6 +13,9 @@ import {
   Layers,
   CheckCircle2,
   XCircle,
+  Info,
+  AlertTriangle,
+  FileStack,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,11 +38,21 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { AiBadge } from "@/components/icegate/ai-badge"
 import { KpiCard } from "@/components/icegate/kpi-card"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { pipelineDocuments, docCodeDirectory, type PipelineDocument } from "@/lib/mock/documents-data"
+import { documentSpec } from "@/lib/mock/document-spec"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -59,16 +72,41 @@ const clients = Array.from(new Set(pipelineDocuments.map((d) => d.client)))
 const docCodes = Array.from(new Set(pipelineDocuments.map((d) => d.docCode)))
 
 export default function DocumentsPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <DocumentsPageContent />
+    </React.Suspense>
+  )
+}
+
+function DocumentsPageContent() {
   useBreadcrumb([{ label: "e-Sanchit Documents" }])
   const router = useRouter()
   const { device } = useMock()
+  const searchParams = useSearchParams()
+  const stageParam = searchParams.get("stage") as PipelineDocument["stage"] | null
 
   const [docs, setDocs] = React.useState<PipelineDocument[]>(pipelineDocuments)
-  const [stageTab, setStageTab] = React.useState<"all" | PipelineDocument["stage"]>("all")
+  const [stageTab, setStageTab] = React.useState<"all" | PipelineDocument["stage"]>(stageParam ?? "all")
+
+  // Same-route sub-nav links (?stage=queued, ?stage=failed) reuse this component
+  // instance, so the tab must resync on navigation, not just on first mount.
+  React.useEffect(() => {
+    setStageTab(stageParam ?? "all")
+  }, [stageParam])
   const [query, setQuery] = React.useState("")
   const [clientFilter, setClientFilter] = React.useState<string[]>([])
   const [codeFilter, setCodeFilter] = React.useState<string[]>([])
+  const [splitConfirmDoc, setSplitConfirmDoc] = React.useState<PipelineDocument | null>(null)
   const uploadInputRef = React.useRef<HTMLInputElement>(null)
+
+  function confirmSplit(docId: string) {
+    setDocs((prev) =>
+      prev.map((d) => (d.id === docId ? { ...d, splitConfirmedBy: "You" } : d)),
+    )
+    toast.success("Split confirmed — parts will be uploaded individually")
+    setSplitConfirmDoc(null)
+  }
 
   function handleUploadFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files ?? [])
@@ -181,6 +219,7 @@ export default function DocumentsPage() {
   )
 
   return (
+    <>
       <div className="flex flex-col gap-3 p-3 @md:p-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -198,11 +237,12 @@ export default function DocumentsPage() {
 
         <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
           <KpiCard
-            label="In pipeline"
-            value={String(pipelineDocuments.length)}
-            delta="Last 24h"
-            trend="up"
-            sparkline={[4, 5, 6, 5, 7, 8, 7, 9, 8, 9, 10, pipelineDocuments.length]}
+            label="Failed / needs rework"
+            value={String(failedCount)}
+            delta={failedCount > 0 ? "Action needed" : "All clear"}
+            trend={failedCount > 0 ? "down" : "good"}
+            sentiment={failedCount > 0 ? "bad" : undefined}
+            sparkline={[1, 1, 0, 1, 2, 1, 0, 1, 1, 0, 1, failedCount]}
           />
           <KpiCard
             label="Queued for AI"
@@ -219,11 +259,11 @@ export default function DocumentsPage() {
             sparkline={[2, 2, 3, 3, 4, 3, 4, 4, 5, 4, 5, uploadedCount]}
           />
           <KpiCard
-            label="Failed / needs rework"
-            value={String(failedCount)}
-            delta={failedCount > 0 ? "Action needed" : "All clear"}
-            trend={failedCount > 0 ? "down" : "good"}
-            sparkline={[1, 1, 0, 1, 2, 1, 0, 1, 1, 0, 1, failedCount]}
+            label="In pipeline"
+            value={String(pipelineDocuments.length)}
+            delta="Last 24h"
+            trend="up"
+            sparkline={[4, 5, 6, 5, 7, 8, 7, 9, 8, 9, 10, pipelineDocuments.length]}
           />
         </div>
 
@@ -232,9 +272,29 @@ export default function DocumentsPage() {
             <ShieldCheck className="size-4 text-status-info-ai" />
             <span className="font-medium text-status-info-ai">Average compression</span>
             <span className="text-muted-foreground">
-              {avgCompression}% smaller on average, keeping images at 300 DPI e-Sanchit minimum.
+              {avgCompression}% smaller on average. e-Sanchit minimum: {documentSpec.minDpi} DPI, {documentSpec.format}
+              , ≤{documentSpec.maxBytesPerFile / 1024} MB per file (~{documentSpec.targetBytesPerPageKb} KB/page).
             </span>
+            <Tooltip>
+              <TooltipTrigger render={<button type="button" aria-label="Source for these figures" />}>
+                <Info className="size-3.5 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-72">
+                {documentSpec.source}. {documentSpec.channelCeiling.note}
+              </TooltipContent>
+            </Tooltip>
           </div>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <span className="flex items-center gap-1 text-xs text-status-warning">
+                  <AlertTriangle className="size-3.5" />
+                  Max {documentSpec.maxDocsPerBatch.value}/batch (unconfirmed)
+                </span>
+              }
+            />
+            <TooltipContent side="bottom" className="max-w-72">{documentSpec.maxDocsPerBatch.note}</TooltipContent>
+          </Tooltip>
         </div>
 
         <div className="relative">
@@ -242,22 +302,29 @@ export default function DocumentsPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search documents"
             placeholder="Search file name, job ID, client, doc name…"
             className="pl-9"
           />
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Tabs value={stageTab} onValueChange={(v) => setStageTab(v as typeof stageTab)}>
-            <TabsList>
-              <TabsTrigger value="all">All ({stageCounts.all})</TabsTrigger>
-              <TabsTrigger value="queued">Queued ({stageCounts.queued ?? 0})</TabsTrigger>
-              <TabsTrigger value="classified">Classified ({stageCounts.classified ?? 0})</TabsTrigger>
-              <TabsTrigger value="normalised">Normalised ({stageCounts.normalised ?? 0})</TabsTrigger>
-              <TabsTrigger value="signed">Signed ({stageCounts.signed ?? 0})</TabsTrigger>
-              <TabsTrigger value="uploaded">Uploaded ({stageCounts.uploaded ?? 0})</TabsTrigger>
-              <TabsTrigger value="failed">Failed ({stageCounts.failed ?? 0})</TabsTrigger>
-            </TabsList>
+          <Tabs value={stageTab} onValueChange={(v) => setStageTab(v as typeof stageTab)} className="min-w-0">
+            <div className="relative min-w-0">
+              <TabsList className="max-w-full snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <TabsTrigger value="all" className="snap-start">All ({stageCounts.all})</TabsTrigger>
+                <TabsTrigger value="queued" className="snap-start">Queued ({stageCounts.queued ?? 0})</TabsTrigger>
+                <TabsTrigger value="classified" className="snap-start">Classified ({stageCounts.classified ?? 0})</TabsTrigger>
+                <TabsTrigger value="normalised" className="snap-start">Normalised ({stageCounts.normalised ?? 0})</TabsTrigger>
+                <TabsTrigger value="signed" className="snap-start">Signed ({stageCounts.signed ?? 0})</TabsTrigger>
+                <TabsTrigger value="uploaded" className="snap-start">Uploaded ({stageCounts.uploaded ?? 0})</TabsTrigger>
+                <TabsTrigger value="failed" className="snap-start">Failed ({stageCounts.failed ?? 0})</TabsTrigger>
+              </TabsList>
+              <div
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-background to-transparent @md:hidden"
+              />
+            </div>
           </Tabs>
 
           {device === "mobile" ? (
@@ -293,7 +360,9 @@ export default function DocumentsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>File</TableHead>
+                  <TableHead className="sticky left-0 z-10 bg-card shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
+                    File
+                  </TableHead>
                   <TableHead>Job</TableHead>
                   <TableHead>Doc code</TableHead>
                   <TableHead>Stage</TableHead>
@@ -313,7 +382,7 @@ export default function DocumentsPage() {
                       className={cn(doc.jobId && "cursor-pointer")}
                       onClick={() => doc.jobId && router.push(`/jobs/${doc.jobId}`)}
                     >
-                      <TableCell>
+                      <TableCell className="sticky left-0 z-10 bg-card shadow-[2px_0_4px_-2px_rgba(0,0,0,0.08)]">
                         <div className="font-medium">{doc.fileName}</div>
                         <div className="text-xs text-muted-foreground">{doc.docName}</div>
                       </TableCell>
@@ -326,7 +395,7 @@ export default function DocumentsPage() {
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           <span className="font-mono text-xs">{doc.docCode}</span>
-                          {doc.aiProposed && <AiBadge label={doc.aiConfidence ? `${doc.aiConfidence}%` : "AI"} />}
+                          {doc.aiProposed && <AiBadge confidence={doc.aiConfidence} />}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -345,19 +414,75 @@ export default function DocumentsPage() {
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-xs">
                         {doc.sizeAfterKb ? (
-                          <>
+                          <span className={cn(doc.sizeAfterKb > documentSpec.maxBytesPerFile && "text-status-danger")}>
                             <span className="text-muted-foreground">{doc.sizeBeforeKb} KB</span>
                             <span className="mx-1 text-muted-foreground">→</span>
                             <span className="font-medium">{doc.sizeAfterKb} KB</span>
-                          </>
+                          </span>
                         ) : (
                           <span className="text-muted-foreground">{doc.sizeBeforeKb} KB</span>
                         )}
+                        {doc.optimisationSteps && (
+                          <Tooltip>
+                            <TooltipTrigger
+                              render={
+                                <button
+                                  type="button"
+                                  aria-label="Optimisation steps applied"
+                                  className="ml-1.5 align-middle text-muted-foreground"
+                                  onClick={(e) => e.stopPropagation()}
+                                />
+                              }
+                            >
+                              <Info className="size-3" />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom" className="max-w-64">
+                              <div className="flex flex-col gap-0.5">
+                                {doc.optimisationSteps.map((step, i) => (
+                                  <span key={i}>{step}</span>
+                                ))}
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
                         {doc.splitRequired && (
-                          <div className="mt-1 text-[11px] text-status-warning">Split into {doc.parts} parts</div>
+                          <div className="mt-1 flex items-center gap-1.5 text-[11px] text-status-warning">
+                            <span>
+                              Split into {doc.parts} parts
+                              {doc.manifestId && (
+                                <>
+                                  {" · "}
+                                  <span className="font-mono">{doc.manifestId}</span>
+                                </>
+                              )}
+                            </span>
+                            {doc.splitConfirmedBy ? (
+                              <span className="text-status-success">Confirmed by {doc.splitConfirmedBy}</span>
+                            ) : (
+                              <Button
+                                variant="link"
+                                size="sm"
+                                className="h-auto p-0 text-[11px]"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setSplitConfirmDoc(doc)
+                                }}
+                              >
+                                Confirm split
+                              </Button>
+                            )}
+                          </div>
                         )}
                       </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{doc.dpi ?? "—"}</TableCell>
+                      <TableCell className="text-xs">
+                        {doc.dpi === undefined ? (
+                          <span className="text-muted-foreground">—</span>
+                        ) : doc.dpi < documentSpec.minDpi ? (
+                          <span className="text-status-danger">{doc.dpi} (below floor)</span>
+                        ) : (
+                          <span className="text-muted-foreground">{doc.dpi}</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {doc.signer ? (
                           <>
@@ -421,7 +546,7 @@ export default function DocumentsPage() {
                   </div>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span>{doc.uploadedAt}</span>
-                    {doc.aiProposed && <AiBadge label={doc.aiConfidence ? `${doc.aiConfidence}%` : "AI"} />}
+                    {doc.aiProposed && <AiBadge confidence={doc.aiConfidence} />}
                   </div>
                 </button>
               )
@@ -431,9 +556,24 @@ export default function DocumentsPage() {
 
         <div className="rounded-lg border border-border shadow-sm">
           <div className="border-b border-border px-4 py-3">
-            <h2 className="text-sm font-semibold">Mandatory document code directory</h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-sm font-semibold">Mandatory document code directory</h2>
+              <Tooltip>
+                <TooltipTrigger
+                  render={<Badge className="border-0 bg-status-warning-bg text-status-warning" />}
+                >
+                  <AlertTriangle className="size-3" data-icon="inline-start" />
+                  Provisional
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-72">
+                  The authoritative published code directory is an open question (Q7) — these codes are not yet
+                  confirmed against it. Do not treat this list as settled.
+                </TooltipContent>
+              </Tooltip>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Reference list of e-Sanchit document codes used across this firm&apos;s filings
+              Reference list of e-Sanchit document codes used across this firm&apos;s filings. The documentTypeCode
+              field on BE/SB schemas allows up to 6 characters — this list is not limited to 3-digit codes.
             </p>
           </div>
           <Table>
@@ -463,5 +603,30 @@ export default function DocumentsPage() {
           <TablePagination total={docCodeDirectory.length} />
         </div>
       </div>
+
+      <Dialog open={splitConfirmDoc !== null} onOpenChange={(open) => !open && setSplitConfirmDoc(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm document split</DialogTitle>
+            <DialogDescription>
+              {splitConfirmDoc?.fileName} is {splitConfirmDoc?.sizeAfterKb} KB after optimisation, above the{" "}
+              {documentSpec.maxBytesPerFile / 1024} MB e-Sanchit ceiling. It will be split into{" "}
+              {splitConfirmDoc?.parts} parts and uploaded individually under manifest{" "}
+              <span className="font-mono">{splitConfirmDoc?.manifestId}</span>.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <FileStack className="size-3.5 shrink-0" />
+            Each part is uploaded and tracked separately; the manifest is what ties them back to one document.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSplitConfirmDoc(null)}>
+              Cancel
+            </Button>
+            <Button onClick={() => splitConfirmDoc && confirmSplit(splitConfirmDoc.id)}>Confirm split</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

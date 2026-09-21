@@ -1,29 +1,6 @@
 import { Check, AlertTriangle } from "lucide-react"
 import { cn } from "@/lib/utils"
-
-const STEPS = [
-  "DRAFT",
-  "VALIDATED",
-  "DOCS_LINKED",
-  "READY_TO_FILE",
-  "SUBMITTED",
-  "NUMBER_GENERATED",
-  "ASSESSED",
-  "DUTY_PAID",
-  "OUT_OF_CHARGE",
-] as const
-
-const STEP_LABELS: Record<string, string> = {
-  DRAFT: "Draft",
-  VALIDATED: "Validated",
-  DOCS_LINKED: "Docs Linked",
-  READY_TO_FILE: "Ready to File",
-  SUBMITTED: "Submitted",
-  NUMBER_GENERATED: "BE Number Generated",
-  ASSESSED: "Assessed",
-  DUTY_PAID: "Duty Paid",
-  OUT_OF_CHARGE: "Out of Charge",
-}
+import { lifecycleSteps } from "@/lib/mock/job-helpers"
 
 export function LifecycleStepper({
   currentState,
@@ -34,16 +11,16 @@ export function LifecycleStepper({
   ruleBadgeCount?: number
   className?: string
 }) {
-  const currentIndex = STEPS.indexOf(currentState as (typeof STEPS)[number])
+  const currentIndex = lifecycleSteps.findIndex((s) => s.key === currentState)
   const effectiveIndex = currentIndex === -1 ? 0 : currentIndex
 
   return (
     <div className={cn("flex items-center overflow-x-auto pb-1", className)}>
-      {STEPS.map((step, i) => {
+      {lifecycleSteps.map((step, i) => {
         const isDone = i < effectiveIndex
         const isCurrent = i === effectiveIndex
         return (
-          <div key={step} className="flex items-center last:flex-none">
+          <div key={step.key} className="flex items-center last:flex-none">
             <div className="flex flex-col items-center gap-1.5 px-1">
               <div className="relative">
                 <div
@@ -56,7 +33,7 @@ export function LifecycleStepper({
                 >
                   {isDone ? <Check className="size-3.5" /> : i + 1}
                 </div>
-                {step === "VALIDATED" && ruleBadgeCount ? (
+                {step.key === "VALIDATED" && ruleBadgeCount ? (
                   <span className="absolute -top-3.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5 whitespace-nowrap rounded-full bg-status-danger px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
                     <AlertTriangle className="size-2.5" />
                     {ruleBadgeCount}
@@ -69,10 +46,10 @@ export function LifecycleStepper({
                   (isDone || isCurrent) && "font-medium text-foreground",
                 )}
               >
-                {STEP_LABELS[step]}
+                {step.label}
               </span>
             </div>
-            {i < STEPS.length - 1 && (
+            {i < lifecycleSteps.length - 1 && (
               <div className={cn("h-0.5 w-6 shrink-0 @sm:w-10", isDone ? "bg-primary" : "bg-border")} />
             )}
           </div>

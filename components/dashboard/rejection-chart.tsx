@@ -32,12 +32,14 @@ export function RejectionChart() {
       </ChartContainer>
       <ul className="flex min-w-0 flex-1 flex-col gap-2">
         {rejectionReasons.map((r) => (
-          <li key={r.code} className="flex items-center gap-2 text-xs">
-            <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
-            <span className="min-w-0 flex-1 truncate text-muted-foreground">
-              <span className="font-mono text-[10px] text-foreground">{r.code}</span> {r.label}
+          <li key={r.code} className="flex items-start justify-between gap-3 text-xs">
+            <span className="flex min-w-0 items-start gap-2 text-muted-foreground">
+              <span className="mt-0.5 size-2 shrink-0 rounded-full" style={{ backgroundColor: r.color }} />
+              <span className="text-pretty">
+                <span className="font-mono text-[10px] text-foreground">{r.code}</span> {r.label}
+              </span>
             </span>
-            <span className="font-mono font-medium tabular-nums text-foreground">{r.value}%</span>
+            <span className="shrink-0 font-mono font-medium tabular-nums text-foreground">{r.value}%</span>
           </li>
         ))}
       </ul>

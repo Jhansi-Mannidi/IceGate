@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useSearchParams } from "next/navigation"
 import { Download, Search, ShieldCheck, FileArchive, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -29,6 +30,10 @@ import {
   queryTurnaroundBuckets,
   timeToClearance,
   deadlineBreaches,
+  queryRateByCause,
+  rejectionByErrorCode,
+  deadlineExposureByMonth,
+  turnaroundByStage,
 } from "@/lib/mock/audit-data"
 import {
   RejectionTrendChart,
@@ -36,13 +41,36 @@ import {
   QueryTurnaroundChart,
   TimeToClearanceChart,
   DeadlineBreachChart,
+  QueryRateByCauseChart,
+  RejectionByCodeChart,
+  DeadlineExposureChart,
+  TurnaroundByStageChart,
 } from "@/components/audit/report-charts"
+import { ChartDataTable } from "@/components/audit/chart-data-table"
+import { HashChainVerify } from "@/components/audit/hash-chain-verify"
+import { formatInr } from "@/lib/mock/format"
 import { downloadJson, timestampSlug } from "@/lib/mock/export"
 import { toast } from "sonner"
 
 export default function AuditPage() {
+  return (
+    <React.Suspense fallback={null}>
+      <AuditPageContent />
+    </React.Suspense>
+  )
+}
+
+function AuditPageContent() {
   useBreadcrumb([{ label: "Audit & Reports" }])
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab") === "trail" ? "trail" : "reports"
+  const [tab, setTab] = React.useState(tabParam)
   const [query, setQuery] = React.useState("")
+
+  // Same-route sub-nav link (?tab=trail) reuses this component instance.
+  React.useEffect(() => {
+    setTab(tabParam)
+  }, [tabParam])
   const [selectedEvent, setSelectedEvent] = React.useState<(typeof auditEvents)[number] | null>(null)
 
   const filtered = auditEvents.filter((e) =>
@@ -86,7 +114,7 @@ export default function AuditPage() {
           <div>
             <h1 className="text-xl font-semibold text-balance">Audit & Reports</h1>
             <p className="text-sm text-muted-foreground">
-              Tamper-evident trail of every action, and firm-wide compliance analytics
+              A verifiable hash-chained trail of every action, and firm-wide compliance analytics
             </p>
           </div>
           <Button variant="outline" onClick={handleExportCompliancePack}>
@@ -95,7 +123,7 @@ export default function AuditPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="reports">
+        <Tabs value={tab} onValueChange={(v) => setTab(v === "trail" ? "trail" : "reports")}>
           <TabsList>
             <TabsTrigger value="reports">Reports</TabsTrigger>
             <TabsTrigger value="trail">Audit trail</TabsTrigger>
@@ -108,6 +136,7 @@ export default function AuditPage() {
                 value="2.6%"
                 delta="-2.2pp vs Apr"
                 trend="down"
+                sentiment="good"
                 sparkline={[4.8, 4.1, 3.6, 3.2, 2.9, 2.6]}
               />
               <KpiCard
@@ -115,6 +144,7 @@ export default function AuditPage() {
                 value="38 min"
                 delta="-33 min vs Apr"
                 trend="down"
+                sentiment="good"
                 sparkline={[71, 62, 54, 47, 41, 38]}
               />
               <KpiCard
@@ -122,6 +152,7 @@ export default function AuditPage() {
                 value="7.2 hrs"
                 delta="-7.0 hrs vs Apr"
                 trend="down"
+                sentiment="good"
                 sparkline={[14.2, 12.5, 10.1, 9.3, 8.0, 7.2]}
               />
               <KpiCard
@@ -129,7 +160,15 @@ export default function AuditPage() {
                 value={`${adoptionMetrics.pctFiledViaVoltus}%`}
                 delta="+26pp vs Apr"
                 trend="up"
+                sentiment="good"
                 sparkline={adoptionMetrics.trend}
+              />
+              <KpiCard
+                label="First-time-right rate"
+                value={`${adoptionMetrics.firstTimeRightRate}%`}
+                delta="Filed without a query or rejection"
+                trend="good"
+                sparkline={[82, 84, 86, 88, 90, adoptionMetrics.firstTimeRightRate]}
               />
             </div>
 
@@ -141,6 +180,15 @@ export default function AuditPage() {
                 </CardHeader>
                 <CardContent>
                   <RejectionTrendChart />
+                  <ChartDataTable
+                    title="Rejection rate trend"
+                    data={rejectionTrend}
+                    columns={[
+                      { key: "month", label: "Month" },
+                      { key: "rate", label: "Rejection rate", format: (v) => `${v}%` },
+                    ]}
+                    filenamePrefix="rejection-rate-trend"
+                  />
                 </CardContent>
               </Card>
               <Card>
@@ -150,6 +198,15 @@ export default function AuditPage() {
                 </CardHeader>
                 <CardContent>
                   <PrepTimeTrendChart />
+                  <ChartDataTable
+                    title="Declaration prep time"
+                    data={prepTimeTrend}
+                    columns={[
+                      { key: "month", label: "Month" },
+                      { key: "minutes", label: "Avg. minutes" },
+                    ]}
+                    filenamePrefix="prep-time-trend"
+                  />
                 </CardContent>
               </Card>
               <Card>
@@ -159,15 +216,110 @@ export default function AuditPage() {
                 </CardHeader>
                 <CardContent>
                   <QueryTurnaroundChart />
+                  <ChartDataTable
+                    title="Query turnaround"
+                    data={queryTurnaroundBuckets}
+                    columns={[
+                      { key: "bucket", label: "Turnaround" },
+                      { key: "count", label: "Queries" },
+                    ]}
+                    filenamePrefix="query-turnaround"
+                  />
                 </CardContent>
               </Card>
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">Time to clearance</CardTitle>
-                  <CardDescription>Out of Charge vs Let Export Order, average hours by month</CardDescription>
+                  <CardDescription>
+                    Out of Charge, average hours by month. Let Export Order is not shown — it has no message in the
+                    ICES format set this project holds (open question Q6).
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <TimeToClearanceChart />
+                  <ChartDataTable
+                    title="Time to clearance"
+                    data={timeToClearance}
+                    columns={[
+                      { key: "month", label: "Month" },
+                      { key: "oocHours", label: "Out of Charge (hrs)" },
+                    ]}
+                    filenamePrefix="time-to-clearance"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Query rate by cause</CardTitle>
+                  <CardDescription>What officers actually ask about, last 90 days</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <QueryRateByCauseChart />
+                  <ChartDataTable
+                    title="Query rate by cause"
+                    data={queryRateByCause}
+                    columns={[
+                      { key: "cause", label: "Cause" },
+                      { key: "count", label: "Queries" },
+                      { key: "pct", label: "Share", format: (v) => `${v}%` },
+                    ]}
+                    filenamePrefix="query-rate-by-cause"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Rejection rate by ICES error code</CardTitle>
+                  <CardDescription>Same source as the dashboard breakdown, in report form</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RejectionByCodeChart />
+                  <ChartDataTable
+                    title="Rejection rate by ICES error code"
+                    data={rejectionByErrorCode}
+                    columns={[
+                      { key: "code", label: "Code" },
+                      { key: "cause", label: "Cause" },
+                      { key: "pct", label: "Share", format: (v) => `${v}%` },
+                    ]}
+                    filenamePrefix="rejection-by-code"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Deadline exposure</CardTitle>
+                  <CardDescription>Rupee value sitting behind open statutory clocks, by month</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DeadlineExposureChart />
+                  <ChartDataTable
+                    title="Deadline exposure"
+                    data={deadlineExposureByMonth}
+                    columns={[
+                      { key: "month", label: "Month" },
+                      { key: "exposureInr", label: "Exposure", format: (v) => formatInr(Number(v)) },
+                    ]}
+                    filenamePrefix="deadline-exposure"
+                  />
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Turnaround by stage</CardTitle>
+                  <CardDescription>Median hours spent in each lifecycle stage</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <TurnaroundByStageChart />
+                  <ChartDataTable
+                    title="Turnaround by stage"
+                    data={turnaroundByStage}
+                    columns={[
+                      { key: "stage", label: "Stage" },
+                      { key: "hours", label: "Median hours" },
+                    ]}
+                    filenamePrefix="turnaround-by-stage"
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -181,16 +333,27 @@ export default function AuditPage() {
               </CardHeader>
               <CardContent>
                 <DeadlineBreachChart />
+                <ChartDataTable
+                  title="Statutory deadline breaches"
+                  data={deadlineBreaches}
+                  columns={[
+                    { key: "month", label: "Month" },
+                    { key: "breaches", label: "Breaches" },
+                  ]}
+                  filenamePrefix="deadline-breaches"
+                />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="trail" className="flex flex-col gap-4 pt-4">
+            <HashChainVerify />
             <div className="relative max-w-md">
               <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
+                aria-label="Search audit trail"
                 placeholder="Search actor, action, job, event ID…"
                 className="pl-9"
               />

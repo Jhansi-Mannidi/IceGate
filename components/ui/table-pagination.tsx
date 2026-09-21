@@ -48,7 +48,7 @@ export function TablePagination({
           value={String(pageSize)}
           onValueChange={(v) => onPageSizeChange?.(Number(v))}
         >
-          <SelectTrigger size="sm" className="w-16">
+          <SelectTrigger size="sm" className="w-16" aria-label="Entries per page">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
