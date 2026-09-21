@@ -1,11 +1,19 @@
+"use client"
+
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { ShieldCheck, ArrowRight } from "lucide-react"
 import { signatories } from "@/lib/mock/data"
 import { cn } from "@/lib/utils"
 
 export function SignatoryPanel() {
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="rounded-lg border border-border bg-card"
+    >
       <div className="flex items-center justify-between border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="size-4 text-muted-foreground" />
@@ -59,6 +67,6 @@ export function SignatoryPanel() {
           </li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   )
 }

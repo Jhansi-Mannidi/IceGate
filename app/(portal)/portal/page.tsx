@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useSearchParams } from "next/navigation"
+import { motion } from "framer-motion"
 import {
   Building2,
   Check,
@@ -27,6 +28,7 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { PortalStatusPill } from "@/components/icegate/portal-status-pill"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup } from "@/components/motion/stagger"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { formatInr } from "@/lib/mock/format"
@@ -130,7 +132,12 @@ function ClientPortalPageContent() {
   return (
       <div className="flex flex-col gap-4 p-3 @md:p-4">
         {/* Header */}
-        <div className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 @md:flex-row @md:items-center @md:justify-between">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+          className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 @md:flex-row @md:items-center @md:justify-between"
+        >
           <div className="flex items-start gap-3">
             <div className="flex size-11 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <Building2 className="size-5" />
@@ -159,20 +166,25 @@ function ClientPortalPageContent() {
               Message broker
             </Button>
           </div>
-        </div>
+        </motion.div>
 
         {/* KPIs */}
-        <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-2 gap-3 @md:grid-cols-4">
           {portalKpis.map((kpi) => (
             <KpiCard key={kpi.label} {...kpi} />
           ))}
-        </div>
+        </StaggerGroup>
 
         <div className="grid grid-cols-1 gap-5 @lg:grid-cols-[1.6fr_1fr]">
           {/* Left column */}
           <div className="flex flex-col gap-5">
             {/* Pending approvals */}
-            <section className="rounded-xl border border-border bg-card">
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="rounded-xl border border-border bg-card"
+            >
               <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
                 <div>
                   <h2 className="text-sm font-semibold">Pending your approval</h2>
@@ -248,10 +260,15 @@ function ClientPortalPageContent() {
                   </div>
                 )}
               </div>
-            </section>
+            </motion.section>
 
             {/* Shipments */}
-            <section className="rounded-xl border border-border bg-card">
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="rounded-xl border border-border bg-card"
+            >
               <div className="border-b border-border px-5 py-4">
                 <h2 className="text-sm font-semibold">Your shipments</h2>
                 <p className="text-xs text-muted-foreground">Live status across all active and recent declarations</p>
@@ -309,12 +326,17 @@ function ClientPortalPageContent() {
                   ))}
                 </div>
               )}
-            </section>
+            </motion.section>
           </div>
 
           {/* Right column */}
           <div className="flex flex-col gap-5">
-            <section className="rounded-xl border border-border bg-card">
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="rounded-xl border border-border bg-card"
+            >
               <Tabs
                 value={tab}
                 onValueChange={(v) => setTab(v === "documents" ? "documents" : v === "approvals" ? "approvals" : "invoices")}
@@ -399,10 +421,15 @@ function ClientPortalPageContent() {
                   ))}
                 </TabsContent>
               </Tabs>
-            </section>
+            </motion.section>
 
             {/* Activity */}
-            <section className="rounded-xl border border-border bg-card">
+            <motion.section
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              className="rounded-xl border border-border bg-card"
+            >
               <div className="border-b border-border px-5 py-4">
                 <h2 className="text-sm font-semibold">Recent activity</h2>
               </div>
@@ -419,7 +446,7 @@ function ClientPortalPageContent() {
                   </li>
                 ))}
               </ol>
-            </section>
+            </motion.section>
           </div>
         </div>
 

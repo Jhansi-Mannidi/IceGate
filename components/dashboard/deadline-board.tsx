@@ -1,4 +1,7 @@
+"use client"
+
 import Link from "next/link"
+import { motion } from "framer-motion"
 import { ArrowRight, AlertTriangle } from "lucide-react"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -13,7 +16,12 @@ export function DeadlineBoard() {
   const outage = channelStatus === "outage"
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="rounded-lg border border-border bg-card"
+    >
       <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="min-w-0">
           <h3 className="text-sm font-semibold text-foreground">Statutory deadline board</h3>
@@ -94,6 +102,6 @@ export function DeadlineBoard() {
           </li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   )
 }

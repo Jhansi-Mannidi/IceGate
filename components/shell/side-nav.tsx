@@ -25,8 +25,8 @@ export function SideNav() {
   return (
     <div className="flex shrink-0 print:hidden">
       {/* Icon rail — always visible on desktop and tablet */}
-      <aside className="flex w-[92px] shrink-0 flex-col items-stretch border-r border-border bg-surface py-2">
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-2">
+      <aside className="flex w-[76px] shrink-0 flex-col items-stretch border-r border-border bg-surface py-2">
+        <nav className="flex flex-1 flex-col gap-0.5 overflow-y-auto px-1.5">
           {items.map((item) => {
             const active =
               item.href === "/" ? pathname === "/" : pathname.startsWith(item.href.split("?")[0])
@@ -36,22 +36,21 @@ export function SideNav() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "group relative flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-center transition-colors",
+                  "group relative flex w-full flex-col items-center gap-1 rounded-lg px-0.5 py-2 text-center transition-colors",
                   active ? "text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
               >
-                {active && (
+                {active ? (
                   <motion.span
                     layoutId="side-nav-active-pill"
                     className="absolute inset-0 rounded-lg bg-primary shadow-sm"
                     transition={{ type: "spring", stiffness: 420, damping: 32 }}
                   />
-                )}
-                {!active && (
-                  <span className="absolute inset-0 rounded-lg bg-accent opacity-0 transition-opacity group-hover:opacity-100" />
+                ) : (
+                  <span className="absolute inset-0 rounded-lg bg-accent transition-colors group-hover:bg-primary/15" />
                 )}
                 <motion.span
-                  className="relative z-10 flex items-center justify-center"
+                  className="relative z-10 flex size-8 shrink-0 items-center justify-center"
                   whileHover={{ scale: 1.08 }}
                   whileTap={{ scale: 0.94 }}
                   transition={{ type: "spring", stiffness: 500, damping: 25 }}
@@ -66,22 +65,26 @@ export function SideNav() {
                     </Badge>
                   ) : null}
                 </motion.span>
-                <span className="relative z-10 text-balance text-[10.5px] font-medium leading-tight">{label}</span>
+                <span className="relative z-10 w-full truncate text-[9.5px] font-medium leading-tight tracking-tight">
+                  {label}
+                </span>
               </Link>
             )
           })}
         </nav>
 
-        <div className="flex flex-col gap-1 border-t border-border px-2 pt-2">
+        <div className="flex flex-col gap-0.5 border-t border-border px-1.5 pt-2">
           {secondaryNav.map((item) => (
             <Link
               key={item.label}
               href={item.href}
-              className="group relative flex w-full flex-col items-center gap-1 rounded-lg px-1 py-2.5 text-center text-muted-foreground transition-colors hover:text-foreground"
+              className="group relative flex w-full flex-col items-center gap-1 rounded-lg px-0.5 py-2 text-center text-muted-foreground transition-colors hover:text-foreground"
             >
-              <span className="absolute inset-0 rounded-lg bg-accent opacity-0 transition-opacity group-hover:opacity-100" />
-              <NavIcon icon={item.icon} className="relative z-10 size-5 shrink-0" />
-              <span className="relative z-10 text-[10.5px] font-medium leading-tight">
+              <span className="absolute inset-0 rounded-lg bg-accent transition-colors group-hover:bg-primary/15" />
+              <span className="relative z-10 flex size-8 shrink-0 items-center justify-center">
+                <NavIcon icon={item.icon} className="size-5 shrink-0" />
+              </span>
+              <span className="relative z-10 w-full truncate text-[9.5px] font-medium leading-tight tracking-tight">
                 {item.shortLabel ?? item.label}
               </span>
             </Link>
@@ -165,7 +168,7 @@ function SecondaryPanel({
               href={sub.href}
               onClick={() => setHash(subHash ? `#${subHash}` : "")}
               className={cn(
-                "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "group relative flex items-center gap-2.5 rounded-md px-3 py-2 text-xs font-medium transition-colors",
                 subActive
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-foreground hover:bg-accent",
@@ -175,7 +178,7 @@ function SecondaryPanel({
                 <NavIcon
                   icon={sub.icon}
                   className={cn(
-                    "size-4 shrink-0",
+                    "size-3.5 shrink-0",
                     subActive ? "text-primary-foreground" : "text-muted-foreground group-hover:text-foreground",
                   )}
                 />
@@ -185,7 +188,7 @@ function SecondaryPanel({
           )
         })}
         {filtered.length === 0 && (
-          <p className="px-3 py-2 text-sm text-muted-foreground">No matches</p>
+          <p className="px-3 py-2 text-xs text-muted-foreground">No matches</p>
         )}
       </nav>
     </aside>

@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   FileStack,
 } from "lucide-react"
+import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +50,7 @@ import {
 } from "@/components/ui/dialog"
 import { AiBadge } from "@/components/icegate/ai-badge"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup, staggerItem } from "@/components/motion/stagger"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { pipelineDocuments, docCodeDirectory, type PipelineDocument } from "@/lib/mock/documents-data"
@@ -235,7 +237,7 @@ function DocumentsPageContent() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-2 gap-3 @md:grid-cols-4">
           <KpiCard
             label="Failed / needs rework"
             value={String(failedCount)}
@@ -265,7 +267,7 @@ function DocumentsPageContent() {
             trend="up"
             sparkline={[4, 5, 6, 5, 7, 8, 7, 9, 8, 9, 10, pipelineDocuments.length]}
           />
-        </div>
+        </StaggerGroup>
 
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-status-info-ai/25 bg-status-info-ai-bg px-4 py-3">
           <div className="flex items-center gap-2 text-sm">
@@ -409,7 +411,9 @@ function DocumentsPageContent() {
                           {stage.label}
                         </span>
                         {doc.stage === "failed" && doc.failReason && (
-                          <div className="mt-1 max-w-56 text-[11px] text-status-danger">{doc.failReason}</div>
+                          <div className="mt-1 max-w-56 whitespace-normal text-[11px] text-status-danger">
+                            {doc.failReason}
+                          </div>
                         )}
                       </TableCell>
                       <TableCell className="whitespace-nowrap text-xs">
@@ -515,12 +519,13 @@ function DocumentsPageContent() {
             <TablePagination total={filtered.length} />
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <StaggerGroup className="flex flex-col gap-3">
             {filtered.map((doc) => {
               const stage = STAGE_CONFIG[doc.stage]
               return (
-                <button
+                <motion.button
                   key={doc.id}
+                  variants={staggerItem}
                   onClick={() => doc.jobId && router.push(`/jobs/${doc.jobId}`)}
                   className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left"
                 >
@@ -548,10 +553,10 @@ function DocumentsPageContent() {
                     <span>{doc.uploadedAt}</span>
                     {doc.aiProposed && <AiBadge confidence={doc.aiConfidence} />}
                   </div>
-                </button>
+                </motion.button>
               )
             })}
-          </div>
+          </StaggerGroup>
         )}
 
         <div className="rounded-lg border border-border shadow-sm">

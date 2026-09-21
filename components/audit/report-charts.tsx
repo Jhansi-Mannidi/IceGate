@@ -50,7 +50,7 @@ export function RejectionTrendChart() {
           fill="var(--color-rate)"
           fillOpacity={0.15}
           stroke="var(--color-rate)"
-          strokeWidth={2} isAnimationActive={false}
+          strokeWidth={2}
         />
       </AreaChart>
     </ChartContainer>
@@ -90,7 +90,7 @@ export function PrepTimeTrendChart() {
           type="monotone"
           stroke="var(--color-minutes)"
           strokeWidth={2}
-          dot={{ r: 3, fill: "var(--color-minutes)" }} isAnimationActive={false}
+          dot={{ r: 3, fill: "var(--color-minutes)" }}
         />
       </LineChart>
     </ChartContainer>
@@ -124,7 +124,7 @@ export function QueryTurnaroundChart() {
           allowDecimals={false}
         />
         <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent hideLabel />} />
-        <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={40} />
       </BarChart>
     </ChartContainer>
   )
@@ -164,7 +164,7 @@ export function TimeToClearanceChart() {
           type="monotone"
           stroke="var(--color-oocHours)"
           strokeWidth={2}
-          dot={{ r: 3, fill: "var(--color-oocHours)" }} isAnimationActive={false}
+          dot={{ r: 3, fill: "var(--color-oocHours)" }}
         />
       </LineChart>
     </ChartContainer>
@@ -199,7 +199,7 @@ export function DeadlineBreachChart() {
           allowDecimals={false}
         />
         <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent hideLabel />} />
-        <Bar dataKey="breaches" fill="var(--color-breaches)" radius={[4, 4, 0, 0]} maxBarSize={32} isAnimationActive={false} />
+        <Bar dataKey="breaches" fill="var(--color-breaches)" radius={[4, 4, 0, 0]} maxBarSize={32} />
       </BarChart>
     </ChartContainer>
   )
@@ -234,7 +234,7 @@ export function QueryRateByCauseChart() {
           stroke="var(--muted-foreground)"
         />
         <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent formatter={(v) => `${v} queries`} />} />
-        <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} maxBarSize={24} isAnimationActive={false} />
+        <Bar dataKey="count" fill="var(--color-count)" radius={[0, 4, 4, 0]} maxBarSize={24} />
       </BarChart>
     </ChartContainer>
   )
@@ -268,7 +268,7 @@ export function RejectionByCodeChart() {
           tickFormatter={(v) => `${v}%`}
         />
         <ChartTooltip content={<ChartTooltipContent formatter={(v) => `${v}%`} />} />
-        <Bar dataKey="pct" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={40} isAnimationActive={false} />
+        <Bar dataKey="pct" fill="var(--color-count)" radius={[4, 4, 0, 0]} maxBarSize={40} />
       </BarChart>
     </ChartContainer>
   )
@@ -307,7 +307,7 @@ export function DeadlineExposureChart() {
           fill="var(--color-exposureInr)"
           fillOpacity={0.15}
           stroke="var(--color-exposureInr)"
-          strokeWidth={2} isAnimationActive={false}
+          strokeWidth={2}
         />
       </AreaChart>
     </ChartContainer>
@@ -343,7 +343,7 @@ export function TurnaroundByStageChart() {
           stroke="var(--muted-foreground)"
         />
         <ChartTooltip cursor={{ fill: "var(--muted)" }} content={<ChartTooltipContent formatter={(v) => `${v} hrs`} />} />
-        <Bar dataKey="hours" fill="var(--color-hours)" radius={[0, 4, 4, 0]} maxBarSize={20} isAnimationActive={false} />
+        <Bar dataKey="hours" fill="var(--color-hours)" radius={[0, 4, 4, 0]} maxBarSize={20} />
       </BarChart>
     </ChartContainer>
   )

@@ -35,16 +35,18 @@ export function MobileBottomTabs() {
               active && "text-primary",
             )}
           >
-            <NavIcon icon={item.icon} className="size-5" />
+            <span className="relative flex items-center justify-center">
+              <NavIcon icon={item.icon} className="size-5" />
+              {item.badge ? (
+                <Badge
+                  variant="destructive"
+                  className="absolute -right-2 -top-1.5 h-4 min-w-4 justify-center rounded-full px-1 text-[10px]"
+                >
+                  {item.badge}
+                </Badge>
+              ) : null}
+            </span>
             {item.label}
-            {item.badge ? (
-              <Badge
-                variant="destructive"
-                className="absolute right-6 top-1 h-4 min-w-4 justify-center rounded-full px-1 text-[10px]"
-              >
-                {item.badge}
-              </Badge>
-            ) : null}
           </Link>
         )
       })}

@@ -20,6 +20,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TablePagination } from "@/components/ui/table-pagination"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup } from "@/components/motion/stagger"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import {
   auditEvents,
@@ -130,7 +131,7 @@ function AuditPageContent() {
           </TabsList>
 
           <TabsContent value="reports" className="flex flex-col gap-4 pt-4">
-            <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-4">
+            <StaggerGroup className="grid grid-cols-1 gap-4 @sm:grid-cols-2 @lg:grid-cols-4">
               <KpiCard
                 label="Rejection rate"
                 value="2.6%"
@@ -170,7 +171,7 @@ function AuditPageContent() {
                 trend="good"
                 sparkline={[82, 84, 86, 88, 90, adoptionMetrics.firstTimeRightRate]}
               />
-            </div>
+            </StaggerGroup>
 
             <div className="grid grid-cols-1 gap-4 @lg:grid-cols-2">
               <Card>

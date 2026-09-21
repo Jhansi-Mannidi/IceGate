@@ -3,8 +3,10 @@
 import { Suspense } from "react"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { motion } from "framer-motion"
 import { Plus, Upload, Wallet, FileWarning } from "lucide-react"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup } from "@/components/motion/stagger"
 import { DeadlineBoard } from "@/components/dashboard/deadline-board"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import { SignatoryPanel } from "@/components/dashboard/signatory-panel"
@@ -64,26 +66,36 @@ function HomePageContent() {
         <ActivityFeed full />
       ) : (
         <>
-          <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-4">
+          <StaggerGroup className="grid grid-cols-1 gap-3 @lg:grid-cols-2 @3xl:grid-cols-4">
             {kpis.map((kpi) => (
               <KpiCard key={kpi.label} {...kpi} />
             ))}
-          </div>
+          </StaggerGroup>
 
           <div className="grid grid-cols-1 gap-5 @4xl:grid-cols-3">
             <div className="flex flex-col gap-5 @4xl:col-span-2">
               <DeadlineBoard />
               <div className="grid grid-cols-1 gap-5 @lg:grid-cols-2">
-                <div className="rounded-lg border border-border bg-card p-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                  className="rounded-lg border border-border bg-card p-4"
+                >
                   <h3 className="text-sm font-semibold text-foreground">Filings by port, last 30 days</h3>
                   <p className="mb-2 text-xs text-muted-foreground">Bill of Entry + Shipping Bill combined</p>
                   <FilingsChart />
-                </div>
-                <div className="rounded-lg border border-border bg-card p-4">
+                </motion.div>
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+                  className="rounded-lg border border-border bg-card p-4"
+                >
                   <h3 className="text-sm font-semibold text-foreground">Top ICES rejection reasons</h3>
                   <p className="mb-3 text-xs text-muted-foreground">Share of rejected filings, last 90 days</p>
                   <RejectionChart />
-                </div>
+                </motion.div>
               </div>
               <SignatoryPanel />
             </div>

@@ -33,7 +33,12 @@ export function FilingsChart() {
           cursor={{ fill: "var(--muted)" }}
           content={<ChartTooltipContent hideLabel />}
         />
-        <Bar dataKey="filings" fill="var(--color-filings)" radius={[4, 4, 0, 0]} maxBarSize={48} />
+        <Bar
+          dataKey="filings"
+          fill="var(--color-filings)"
+          radius={[4, 4, 0, 0]}
+          maxBarSize={48}
+        />
       </BarChart>
     </ChartContainer>
   )

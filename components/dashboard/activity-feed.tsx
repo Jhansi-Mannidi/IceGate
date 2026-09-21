@@ -1,10 +1,18 @@
+"use client"
+
+import { motion } from "framer-motion"
 import { activityFeed } from "@/lib/mock/data"
 import { timeAgo } from "@/lib/mock/time"
 import { cn } from "@/lib/utils"
 
 export function ActivityFeed({ full = false }: { full?: boolean }) {
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+      className="rounded-lg border border-border bg-card"
+    >
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold text-foreground">Recent activity</h3>
         <p className="text-xs text-muted-foreground">Across all clients and ports</p>
@@ -29,6 +37,6 @@ export function ActivityFeed({ full = false }: { full?: boolean }) {
           </li>
         ))}
       </ul>
-    </div>
+    </motion.div>
   )
 }

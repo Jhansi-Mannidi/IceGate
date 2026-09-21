@@ -3,6 +3,8 @@
 import * as React from "react"
 import Image from "next/image"
 import { useRouter, usePathname } from "next/navigation"
+import { motion } from "framer-motion"
+import { StaggerGroup, staggerItem } from "@/components/motion/stagger"
 import {
   Lock,
   Search,
@@ -88,7 +90,7 @@ export function AppLauncher({ open, onOpenChange }: { open: boolean; onOpenChang
         </div>
 
         <div className="mock-scrollbar max-h-[420px] overflow-y-auto p-6">
-          <div className="grid grid-cols-3 gap-3 @lg:grid-cols-4 @2xl:grid-cols-5">
+          <StaggerGroup className="grid grid-cols-3 gap-3 @lg:grid-cols-4 @2xl:grid-cols-5">
             {filteredModules.map((m) => {
               const active = m.href === "/" ? pathname === "/" : pathname.startsWith(m.href.split("?")[0])
               return (
@@ -120,8 +122,9 @@ export function AppLauncher({ open, onOpenChange }: { open: boolean; onOpenChang
               )
             })}
             {filteredSoon.map((m) => (
-              <div
+              <motion.div
                 key={m.label}
+                variants={staggerItem}
                 className="flex flex-col items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-center opacity-70"
               >
                 <span className="relative flex size-12 items-center justify-center rounded-lg bg-primary/10 text-primary">
@@ -131,9 +134,9 @@ export function AppLauncher({ open, onOpenChange }: { open: boolean; onOpenChang
                   </span>
                 </span>
                 <span className="text-sm font-medium leading-snug text-muted-foreground">{m.label}</span>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </DialogContent>
     </Dialog>

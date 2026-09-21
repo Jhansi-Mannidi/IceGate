@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
+import { motion } from "framer-motion"
 import { FileSpreadsheet, Upload, PenLine, Download, ArrowLeft, Paperclip, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -137,7 +138,12 @@ function NewJobPageContent() {
         </section>
 
         {mode && (
-          <section className="rounded-xl border border-border bg-card p-4 @sm:p-5">
+          <motion.section
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="rounded-xl border border-border bg-card p-4 @sm:p-5"
+          >
             <h2 className="mb-4 text-sm font-semibold text-foreground">Job details</h2>
 
             {mode === "Duplicate existing" && (
@@ -283,7 +289,7 @@ function NewJobPageContent() {
                 Create job
               </Button>
             </div>
-          </section>
+          </motion.section>
         )}
       </div>
   )

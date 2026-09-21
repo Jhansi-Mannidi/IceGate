@@ -45,7 +45,7 @@ export interface NavItem {
 export const primaryNav: NavItem[] = [
   {
     label: "Home",
-    shortLabel: "My Dashboard",
+    shortLabel: "Dashboard",
     href: "/",
     icon: "home",
     subItems: [

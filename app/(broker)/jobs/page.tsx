@@ -2,6 +2,8 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { motion } from "framer-motion"
+import { StaggerGroup, staggerItem } from "@/components/motion/stagger"
 import {
   Plus,
   Upload,
@@ -202,8 +204,10 @@ function JobsPageContent() {
               }
               onSelect={(e) => e.preventDefault()}
             >
-              <span className="font-mono text-xs">{p.code}</span>
-              <span className="text-muted-foreground">— {p.name}</span>
+              <span className="flex min-w-0 items-center gap-1.5 whitespace-nowrap">
+                <span className="font-mono text-xs">{p.code}</span>
+                <span className="truncate text-muted-foreground">— {p.name}</span>
+              </span>
             </DropdownMenuCheckboxItem>
           ))}
         </DropdownMenuContent>
@@ -635,10 +639,11 @@ function JobsPageContent() {
           <TablePagination total={filtered.length} />
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <StaggerGroup className="flex flex-col gap-3">
           {filtered.map((job) => (
-            <button
+            <motion.button
               key={job.id}
+              variants={staggerItem}
               onClick={() => router.push(`/jobs/${job.id}`)}
               className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left"
             >
@@ -671,9 +676,9 @@ function JobsPageContent() {
                 </div>
                 {job.clockDueInMinutes !== undefined && <CountdownChip minutes={job.clockDueInMinutes} />}
               </div>
-            </button>
+            </motion.button>
           ))}
-        </div>
+        </StaggerGroup>
       )}
     </div>
   )

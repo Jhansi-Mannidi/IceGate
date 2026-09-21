@@ -1,7 +1,9 @@
 "use client"
 
+import { motion } from "framer-motion"
 import { ArrowDownRight, ArrowUpRight, CheckCircle2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { staggerItem } from "@/components/motion/stagger"
 
 export function KpiCard({
   label,
@@ -28,7 +30,10 @@ export function KpiCard({
   const resolvedSentiment = trend === "good" ? "good" : (sentiment ?? "neutral")
 
   return (
-    <div className="flex flex-col gap-1 rounded-xl bg-card p-3 shadow-[0_1px_2px_rgba(16,24,40,0.04),0_1px_3px_rgba(16,24,40,0.06)] ring-1 ring-foreground/[0.06] dark:shadow-none">
+    <motion.div
+      variants={staggerItem}
+      className="flex flex-col gap-1 rounded-xl border-t-[3px] border-t-primary bg-card p-3 shadow-[0_2px_4px_rgba(16,24,40,0.06),0_6px_12px_rgba(16,24,40,0.08)] ring-1 ring-foreground/[0.06] dark:shadow-none"
+    >
       <p className="text-xs leading-none font-medium text-muted-foreground">{label}</p>
       <p className="text-lg leading-none font-semibold tabular-nums text-foreground">{value}</p>
       <span
@@ -48,6 +53,6 @@ export function KpiCard({
         )}
         {delta}
       </span>
-    </div>
+    </motion.div>
   )
 }

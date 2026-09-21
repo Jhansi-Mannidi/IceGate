@@ -186,6 +186,9 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+  svg.lucide {
+    stroke-width: 2.25;
+  }
 }
 
 @layer utilities {
@@ -196,5 +199,11 @@
   .mock-scrollbar::-webkit-scrollbar-thumb {
     background-color: var(--border-strong);
     border-radius: 8px;
+  }
+  .border.border-border.bg-card {
+    box-shadow: 0 2px 4px rgba(16, 24, 40, 0.06), 0 6px 12px rgba(16, 24, 40, 0.08);
+  }
+  .dark .border.border-border.bg-card {
+    box-shadow: none;
   }
 }

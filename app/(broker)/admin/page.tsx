@@ -30,9 +30,25 @@ import {
   firmUsers,
   type Capability,
 } from "@/lib/mock/admin-data"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
-import { RotateCw, ShieldAlert, Plus, TriangleAlert, Mail } from "lucide-react"
+import { RotateCw, ShieldAlert, Plus, TriangleAlert, Mail, CheckCircle2, Clock3, MoreHorizontal, UserCog, UserX } from "lucide-react"
 import { toast } from "sonner"
+
+function initialsOf(name: string) {
+  return name
+    .split(" ")
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase()
+}
 
 type SubSection = "tenant" | "ports" | "dsc" | "channels" | "clients" | "users"
 
@@ -515,23 +531,76 @@ function UsersRolesSection() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-10" />
                 <TableHead>Name</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Last active</TableHead>
+                <TableHead className="w-10" />
               </TableRow>
             </TableHeader>
             <TableBody>
               {firmUsers.map((u) => (
-                <TableRow key={u.email}>
+                <TableRow key={u.email} className="group">
+                  <TableCell>
+                    <Avatar className="size-7">
+                      <AvatarFallback className="bg-primary/10 text-[11px] font-semibold text-primary">
+                        {initialsOf(u.name)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </TableCell>
                   <TableCell className="font-medium">{u.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{u.email}</TableCell>
+                  <TableCell>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/5 px-2.5 py-1 text-xs font-medium text-primary">
+                      <Mail className="size-3" />
+                      {u.email}
+                    </span>
+                  </TableCell>
                   <TableCell className="text-sm">{u.role}</TableCell>
                   <TableCell>
-                    <Badge variant={u.status === "Active" ? "secondary" : "outline"}>{u.status}</Badge>
+                    {u.status === "Active" ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-status-success-bg px-2.5 py-1 text-xs font-medium text-status-success">
+                        <CheckCircle2 className="size-3" />
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-status-warning-bg px-2.5 py-1 text-xs font-medium text-status-warning">
+                        <Clock3 className="size-3" />
+                        Invited
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="text-xs text-muted-foreground">{u.lastActive}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger
+                        render={
+                          <Button
+                            variant="ghost"
+                            size="icon-sm"
+                            className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 data-[popup-open]:opacity-100"
+                            aria-label={`Actions for ${u.name}`}
+                          />
+                        }
+                      >
+                        <MoreHorizontal className="size-4" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => toast.success(`Editing role for ${u.name}`)}>
+                          <UserCog data-icon="inline-start" />
+                          Edit role
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => toast.success(`${u.name} deactivated`)}
+                          className="text-status-danger"
+                        >
+                          <UserX data-icon="inline-start" />
+                          Deactivate
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

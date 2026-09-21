@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { motion } from "framer-motion"
 import { Search, ChevronDown, ChevronRight, Wallet, Download, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,6 +21,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { StatusPill } from "@/components/icegate/status-pill"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup, staggerItem } from "@/components/motion/stagger"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { dutyLedger, type DutyLedgerRow } from "@/lib/mock/data"
@@ -139,7 +141,7 @@ function DutyPageContent() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-2 gap-3 @md:grid-cols-4">
           <KpiCard
             label="Outstanding duty"
             value={formatInr(totalOutstanding, { withSymbol: true })}
@@ -170,7 +172,7 @@ function DutyPageContent() {
             sentiment={varianceTotal > 0 ? "bad" : undefined}
             sparkline={[400, 500, 300, 600, 450, 700, 550, 650, 500, 600, 550, varianceTotal / 10]}
           />
-        </div>
+        </StaggerGroup>
 
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="relative">
@@ -342,10 +344,11 @@ function DutyPageContent() {
             <TablePagination total={filtered.length} />
           </div>
         ) : (
-          <div className="flex flex-col gap-3">
+          <StaggerGroup className="flex flex-col gap-3">
             {filtered.map((d) => (
-              <button
+              <motion.button
                 key={d.job}
+                variants={staggerItem}
                 onClick={() => router.push(`/jobs/${d.job}`)}
                 className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4 text-left"
               >
@@ -364,9 +367,9 @@ function DutyPageContent() {
                   <div className="text-xs text-muted-foreground">Challan {d.challanNo}</div>
                 )}
                 {d.status !== "Paid" && <CountdownChip minutes={d.dueInMinutes} />}
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </StaggerGroup>
         )}
 
         <div className="flex flex-col gap-1 rounded-lg border border-border bg-muted/40 px-4 py-3 text-xs text-muted-foreground">

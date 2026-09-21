@@ -45,7 +45,7 @@ export default function RootLayout({
             <LiveRegionProvider>
               <TooltipProvider delayDuration={200}>
                 {children}
-                <Toaster position="top-right" />
+                <Toaster position="bottom-right" />
               </TooltipProvider>
             </LiveRegionProvider>
           </BreadcrumbProvider>

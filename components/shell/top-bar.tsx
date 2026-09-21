@@ -18,8 +18,6 @@ import {
   UserCog,
 } from "lucide-react"
 import { useMock } from "@/lib/mock/providers"
-import { CountdownChip } from "@/components/icegate/countdown-chip"
-import { EnvironmentBadge } from "@/components/icegate/environment-badge"
 import { ChannelStatusBadge } from "@/components/icegate/channel-status-badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -65,11 +63,16 @@ export function TopBar() {
       {device === "mobile" && (
         <>
           <Link href="/" className="flex shrink-0 items-center" aria-label="VoltusFreight home">
-            <div className="relative size-7 shrink-0">
-              <Image src="/images/voltusfreight-logo.png" alt="VoltusFreight" fill className="object-contain" />
+            <div className="relative h-6 w-[131px] shrink-0">
+              <Image
+                src="/images/voltusfreight-lockup.png"
+                alt="VoltusFreight — AI-Native ERP"
+                fill
+                className="object-contain object-left"
+                priority
+              />
             </div>
           </Link>
-          <EnvironmentBadge />
         </>
       )}
 
@@ -108,33 +111,27 @@ export function TopBar() {
             <TooltipContent side="bottom">Application launcher</TooltipContent>
           </Tooltip>
 
-          <Link href="/" className="flex shrink-0 items-center gap-2" aria-label="VoltusFreight home">
-            <div className="relative size-8 shrink-0">
-              <Image src="/images/voltusfreight-logo.png" alt="VoltusFreight" fill className="object-contain" />
-            </div>
-            <div className="hidden flex-col leading-none @md:flex">
-              <span className="text-sm font-extrabold tracking-tight">
-                <span className="text-foreground">VOLTUS</span>
-                <span className="text-accent-orange">FREIGHT</span>
-              </span>
-              <span className="text-[10px] font-medium text-muted-foreground">AI-Native ERP</span>
+          <Link href="/" className="flex shrink-0 items-center" aria-label="VoltusFreight home">
+            <div className="relative h-6 w-[131px] shrink-0">
+              <Image
+                src="/images/voltusfreight-lockup.png"
+                alt="VoltusFreight — AI-Native ERP"
+                fill
+                className="object-contain object-left"
+                priority
+              />
             </div>
           </Link>
 
-          <EnvironmentBadge />
-
           <div className="h-6 w-px shrink-0 bg-border" />
 
-          <Button
-            render={<Link href="/" />}
-            nativeButton={false}
-            variant="ghost"
-            size="sm"
-            className="hidden shrink-0 items-center gap-1.5 @lg:inline-flex"
+          <Link
+            href="/"
+            className="hidden shrink-0 items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground @lg:inline-flex"
           >
             <Home className="size-4" />
             Home
-          </Button>
+          </Link>
         </>
       )}
 
@@ -160,12 +157,6 @@ export function TopBar() {
             </TooltipContent>
           </Tooltip>
         )}
-
-        <CountdownChip
-          minutes={185}
-          label="Nearest deadline"
-          className="hidden @lg:inline-flex"
-        />
 
         <DropdownMenu>
           <DropdownMenuTrigger

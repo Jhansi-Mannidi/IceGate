@@ -15,6 +15,7 @@ import {
   ListChecks,
   CheckCircle2,
 } from "lucide-react"
+import { motion } from "framer-motion"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -49,6 +50,7 @@ import { TablePagination } from "@/components/ui/table-pagination"
 import { Textarea } from "@/components/ui/textarea"
 import { CountdownChip } from "@/components/icegate/countdown-chip"
 import { KpiCard } from "@/components/icegate/kpi-card"
+import { StaggerGroup, staggerItem } from "@/components/motion/stagger"
 import { useBreadcrumb } from "@/lib/mock/breadcrumb-context"
 import { useMock } from "@/lib/mock/providers"
 import { queryDesk, deadlineBoard, type QueryItem, type QueryRound } from "@/lib/mock/data"
@@ -210,7 +212,7 @@ function QueriesPageContent() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 @md:grid-cols-4">
+        <StaggerGroup className="grid grid-cols-2 gap-3 @md:grid-cols-4">
           <KpiCard
             label="Open queries"
             value={String(queryDesk.length)}
@@ -240,7 +242,7 @@ function QueriesPageContent() {
             trend="good"
             sparkline={[6.2, 5.8, 5.4, 5.0, 4.6, 4.4, 4.2, 4.0, 3.9, 3.8, 3.7, 3.67]}
           />
-        </div>
+        </StaggerGroup>
 
         {view === "deadlines" ? (
         <div className="rounded-lg border border-border shadow-sm">
@@ -324,10 +326,11 @@ function QueriesPageContent() {
           </div>
 
           <div className="grid gap-4 @lg:grid-cols-[minmax(0,1fr)_420px]">
-            <div className="flex flex-col gap-2">
+            <StaggerGroup className="flex flex-col gap-2">
               {filtered.map((q) => (
-                <button
+                <motion.button
                   key={q.job}
+                  variants={staggerItem}
                   onClick={() => selectQuery(q.job)}
                   className={`flex flex-col gap-2 rounded-lg border p-4 text-left transition-colors ${
                     selected?.job === q.job
@@ -349,9 +352,9 @@ function QueriesPageContent() {
                     </span>
                     <span>Owner: {q.owner}</span>
                   </div>
-                </button>
+                </motion.button>
               ))}
-            </div>
+            </StaggerGroup>
 
             {selected && (
               <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">

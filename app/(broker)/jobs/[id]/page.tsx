@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { notFound, useParams } from "next/navigation"
+import { motion } from "framer-motion"
 import { Download, MoreHorizontal, Copy, Ban } from "lucide-react"
 import { toast } from "sonner"
 import { JobBreadcrumb } from "@/components/declaration/job-breadcrumb"
@@ -172,9 +173,14 @@ export default function JobDetailPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-4 @sm:p-5">
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+        className="rounded-xl border border-border bg-card p-4 @sm:p-5"
+      >
         <LifecycleStepper currentState={state} ruleBadgeCount={blockingCount} />
-      </div>
+      </motion.div>
 
       <div className="grid grid-cols-1 gap-5 @lg:grid-cols-[minmax(0,1fr)_320px]">
         <Tabs defaultValue="items">
@@ -190,7 +196,12 @@ export default function JobDetailPage() {
             <TabsTrigger value="timeline">Timeline</TabsTrigger>
           </TabsList>
 
-          <div className="mt-4 rounded-xl border border-border bg-card p-4 @sm:p-5">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="mt-4 rounded-xl border border-border bg-card p-4 @sm:p-5"
+          >
             <TabsContent value="header">
               <HeaderTab header={jobHeader} />
             </TabsContent>
@@ -230,7 +241,7 @@ export default function JobDetailPage() {
             <TabsContent value="timeline">
               <TimelineTab nodes={beLifecycle} />
             </TabsContent>
-          </div>
+          </motion.div>
 
           <div className="print:hidden">
             <FooterActionBar jobState={state} blockingCount={blockingCount} onAdvance={handleAdvance} />
@@ -238,16 +249,26 @@ export default function JobDetailPage() {
         </Tabs>
 
         <aside className="flex flex-col gap-4 print:hidden">
-          <div className="rounded-xl border border-border bg-card p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="rounded-xl border border-border bg-card p-4"
+          >
             <PreflightPanel
               rules={preflightRules}
               overrides={overrides}
               onOverride={handleOverride}
               onClearOverride={handleClearOverride}
             />
-          </div>
+          </motion.div>
           <AiExtractPanel extractions={aiExtractions} />
-          <div className="rounded-xl border border-border bg-card p-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+            className="rounded-xl border border-border bg-card p-4"
+          >
             <h3 className="mb-2 text-sm font-semibold text-foreground">Assessable value snapshot</h3>
             <div className="flex flex-col gap-1.5 text-xs">
               <div className="flex justify-between">
@@ -267,7 +288,7 @@ export default function JobDetailPage() {
                 <span className="font-mono tabular-nums text-foreground">{formatInr(4218488)}</span>
               </div>
             </div>
-          </div>
+          </motion.div>
         </aside>
       </div>
       </div>
